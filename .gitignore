@@ -1,3 +1,9 @@
+# Input files
+day*.txt
+
+# Backup files
+*.py.bak
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
