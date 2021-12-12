@@ -53,29 +53,22 @@ class SparseGrid:
             if all(x == 0 for x in delta):
                 # Skip the zero delta.
                 continue
-            appliedDelta = self._applyDelta(coords, delta)
-            if len(appliedDelta) != self._dimension:
-                # At least one value was found to be outside the grid bounds.
+            adjCoords = ()
+            # Apply the delta and concatente resulting coordinate in each dimension.
+            for d in range(0, self._dimension):
+                adjCoords += ((coords[d] + delta[d]),)
+            yield adjCoords
+
+    def getAdjacentCoordsInGrid(self, coords):
+        for adjCoords in self.getAdjacentCoords(coords):
+            notInGrid = False
+            for d in range(self._dimension):
+                if adjCoords[d] < self._minCoords[d] or adjCoords[d] > self._maxCoords[d]:
+                    notInGrid = True
+                    break
+            if notInGrid:
                 continue
-            yield appliedDelta
-
-    # More efficient 2D-specific adjacency. Probably a needless optimization.
-    def getAdjacentCoords2D(self, coords):
-        self._validateCoords(coords)
-        assert self._dimension == 2, 'Cannot getAdjacentCoords2D with dimension: %d' % self._dimension
-
-        result = []
-        for dx in [-1, 0, 1]:
-            for dy in [-1, 0, 1]:
-                if dx == 0 and dy == 0:
-                    continue
-                nx = coords[0] + dx
-                ny = coords[1] + dy
-                if nx < self._minCoords[0] or nx > self._maxCoords[0] or \
-                   ny < self._minCoords[1] or ny > self._maxCoords[1]:
-                    continue
-                yield (coords[0] + dx, coords[1] + dy)
-
+            yield adjCoords
 
     def getAllCoords(self):
         return _nDimRange(self._dimension, self._minCoords, self._maxCoords)
@@ -149,16 +142,6 @@ class SparseGrid:
                 print()
             print()
         print()
-
-    def _applyDelta(self, coords, delta):
-        adjCoords = ()
-        # Apply the delta and concatente resulting coordinate in each dimension.
-        for d in range(0, self._dimension):
-            newValue = coords[d] + delta[d]
-            if newValue < self._minCoords[d] or newValue > self._maxCoords[d]:
-                return ()
-            adjCoords += (newValue,)
-        return adjCoords
 
     def _validateCoords(self, coords):
         assert len(coords) == self._dimension, 'Coords have wrong dimension: %s' % str(coords)

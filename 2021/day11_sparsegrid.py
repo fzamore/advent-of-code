@@ -19,8 +19,9 @@ def flashCell(grid, coords):
     grid.addMark(coords)
 
     flashes = 1
-    for adjCoords in grid.getAdjacentCoords(coords):
+    for adjCoords in grid.getAdjacentCoordsInGrid(coords):
         v = grid.getValue(adjCoords)
+        assert v != None, 'Grid missing value for coords: %s' % str(adjCoords)
         incrCell(grid, adjCoords)
         if v == 9:
             flashes += flashCell(grid, adjCoords)
