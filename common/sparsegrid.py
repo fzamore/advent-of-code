@@ -80,6 +80,12 @@ class SparseGrid:
     def getAllCoords(self):
         return _nDimRange(self._dimension, self._minCoords, self._maxCoords)
 
+    def getMinCoords(self):
+        return self._minCoords
+
+    def getMaxCoords(self):
+        return self._maxCoords
+
     def addMark(self, coords, mark=None):
         self._validateCoords(coords)
         mark = self._validateMark(mark)
@@ -111,9 +117,9 @@ class SparseGrid:
         assert self._dimension == 2, 'Cannot print2D with dimension: %d' % self._dimension
 
         if not minCoords:
-            minCoords = (self._minCoords[0], self._minCoords[1])
+            minCoords = self._minCoords
         if not maxCoords:
-            maxCoords = (self._maxCoords[0], self._maxCoords[1])
+            maxCoords = self._maxCoords
 
         self._validateCoords(minCoords)
         self._validateCoords(maxCoords)
@@ -121,6 +127,26 @@ class SparseGrid:
         for j in range(minCoords[1], maxCoords[1] + 1):
             for i in range(minCoords[0], maxCoords[0] + 1):
                 print('%s%s' % (self.getValue((i, j), default), sep), end='')
+            print()
+        print()
+
+    def print2DSlices(self, minCoords=None, maxCoords=None, sep='', default=None):
+        assert self._dimension == 3, 'Cannot print2DSlices with dimension: %d' % self._dimension
+
+        if not minCoords:
+            minCoords = self._minCoords
+        if not maxCoords:
+            maxCoords = self._maxCoords
+
+        self._validateCoords(minCoords)
+        self._validateCoords(maxCoords)
+
+        for k in range(minCoords[2], maxCoords[2] + 1):
+            print('z = %d' % k)
+            for j in range(minCoords[1], maxCoords[1] + 1):
+                for i in range(minCoords[0], maxCoords[0] + 1):
+                    print('%s%s' % (self.getValue((i, j, k), default), sep), end='')
+                print()
             print()
         print()
 
