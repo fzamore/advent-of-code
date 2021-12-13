@@ -1,23 +1,33 @@
 from common.sparsegrid import SparseGrid
 
-def foldGrid(grid, fold):
+def updateMaxCoords(maxCoords, x, y):
+    if x > maxCoords[0]:
+        maxCoords = (x, maxCoords[1])
+    if y > maxCoords[1]:
+        maxCoords = (maxCoords[0], y)
+    return maxCoords
+
+def foldGrid(grid, fold, maxCoords):
     assert fold[0] == 0 or fold[1] == 0, 'invalid fold: %s' % fold
 
     d = 0 if fold[1] == 0 else 1
-    for coords in grid.getAllCoords():
-        if not grid.hasValue(coords):
-            continue
-        assert coords[d] != fold[d],  'point along fold: %s, %s' % (coords, fold)
-        if coords[d] > fold[d]:
-            grid.deleteValue(coords)
-            delta = coords[d] - fold[d]
-            newcoord = fold[d] - delta
-            newcoords = (newcoord, coords[1]) if d == 0 else (coords[0], newcoord)
-            grid.setValue(newcoords, '#')
+    for x in range(maxCoords[0]):
+        for y in range(maxCoords[1]):
+            coords = (x, y)
+            if coords[d] > fold[d] and grid.hasValue(coords):
+                delta = coords[d] - fold[d]
+                newCoord = fold[d] - delta
+                if d == 0:
+                    newCoords = (newCoord, coords[1])
+                elif d == 1:
+                    newCoords = (coords[0], newCoord)
+                grid.deleteValue(coords)
+                grid.setValue(newCoords, '#')
 
 def part1():
     grid = SparseGrid(2)
     folds = []
+    maxCoords = (0, 0)
 
     f = open('day13.txt')
     for line in f.readlines():
@@ -39,15 +49,13 @@ def part1():
             assert len(values) == 2, 'bad line %s' % line
             x = int(line.split(',')[0])
             y = int(line.split(',')[1])
+            maxCoords = updateMaxCoords(maxCoords, x, y)
             grid.setValue((x, y), '#')
     f.close()
 
-    grid.print2D(default='.')
     print(folds)
 
-    foldGrid(grid, folds[0])
-
-    grid.print2D(default='.')
+    foldGrid(grid, folds[0], maxCoords)
 
     c = 0
     for coords in grid.getAllCoords():
@@ -58,6 +66,7 @@ def part1():
 def part2():
     grid = SparseGrid(2)
     folds = []
+    maxCoords = (0, 0)
 
     f = open('day13.txt')
     for line in f.readlines():
@@ -79,13 +88,15 @@ def part2():
             assert len(values) == 2, 'bad line %s' % line
             x = int(line.split(',')[0])
             y = int(line.split(',')[1])
+            maxCoords = updateMaxCoords(maxCoords, x, y)
             grid.setValue((x, y), '#')
     f.close()
 
     print(folds)
 
     for fold in folds:
-        foldGrid(grid, fold)
+        foldGrid(grid, fold, maxCoords)
+        maxCoords = (maxCoords[0], fold[1]) if fold[0] == 0 else (fold[0], maxCoords[1])
 
     grid.print2D(minCoords=[0, 0], maxCoords=[50, 6], default='.')
 
