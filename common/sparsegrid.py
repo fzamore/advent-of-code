@@ -42,6 +42,13 @@ class SparseGrid:
         self._validateCoords(coords)
         return _index(coords) in self._map
 
+    def deleteValue(self, coords):
+        self._validateCoords(coords)
+
+        if not self.hasValue(coords):
+            return
+        del self._map[_index(coords)]
+
     def getAdjacentCoords(self, coords):
         deltas = _nDimRange(
             self._dimension,
