@@ -63,9 +63,6 @@ def dijkstra(grid, maxX, maxY):
     # map from point to distance from start
     d = defaultdict(lambda: float('inf'))
 
-    # map of seen points
-    seen = set()
-
     neighbor_deltas = [(-1, 0), (0, -1), (1, 0), (0, 1)]
 
     # initialize with the start point
@@ -74,7 +71,6 @@ def dijkstra(grid, maxX, maxY):
 
     while len(q) > 0:
         p = heappop(q)[1]
-        seen.add(p)
 
         pv = d[p]
         assert d[p] != float('inf'), 'Missing point in dict: %s' % str(p)
@@ -87,9 +83,6 @@ def dijkstra(grid, maxX, maxY):
             n = (p[0] + dx, p[1] + dy)
 
             if n[0] < 0 or n[0] >= maxX or n[1] < 0 or n[1] >= maxY:
-                continue
-
-            if n in seen:
                 continue
 
             nv = getValue(grid, n[0], n[1], maxX, maxY)
