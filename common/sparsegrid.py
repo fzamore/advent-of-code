@@ -1,6 +1,3 @@
-def _index(coords):
-    return ','.join([str(x) for x in coords])
-
 def _nDimRange(d, minValues, maxValues):
     if d == 0:
         yield ()
@@ -30,24 +27,24 @@ class SparseGrid:
     def setValue(self, coords, value):
         self._validateCoords(coords)
         self._updateBoundaryCoords(coords)
-        self._map[_index(coords)] = value
+        self._map[coords] = value
 
     def getValue(self, coords, default=None):
         self._validateCoords(coords)
         if self.hasValue(coords):
-            return self._map[_index(coords)]
+            return self._map[coords]
         return default
 
     def hasValue(self, coords):
         self._validateCoords(coords)
-        return _index(coords) in self._map
+        return coords in self._map
 
     def deleteValue(self, coords):
         self._validateCoords(coords)
 
         if not self.hasValue(coords):
             return
-        del self._map[_index(coords)]
+        del self._map[coords]
 
     def getAdjacentCoords(self, coords):
         deltas = _nDimRange(
@@ -81,7 +78,7 @@ class SparseGrid:
         return _nDimRange(self._dimension, self._minCoords, self._maxCoords)
 
     def getAllCoords(self):
-        return [tuple([int(coord) for coord in key.split(',')]) for key in self._map]
+        return list(self._map.keys())
 
     def getMinCoords(self):
         return self._minCoords
@@ -93,19 +90,17 @@ class SparseGrid:
         self._validateCoords(coords)
         mark = self._validateMark(mark)
 
-        index = _index(coords)
-        if index not in self._marked:
-            self._marked[index] = {}
+        if coords not in self._marked:
+            self._marked[coords] = {}
 
-        self._marked[_index(coords)][mark] = True
+        self._marked[coords][mark] = True
 
     def clearMark(self, coords, mark=None):
         self._validateCoords(coords)
         mark = self._validateMark(mark)
 
-        index = _index(coords)
-        if index in self._marked and mark in self._marked[index]:
-            del self._marked[index][mark]
+        if coords in self._marked and mark in self._marked[index]:
+            del self._marked[coords][mark]
 
     def clearAllMarks(self):
         self._marked = {}
@@ -113,8 +108,7 @@ class SparseGrid:
     def hasMark(self, coords, mark=None):
         mark = self._validateMark(mark)
 
-        index = _index(coords)
-        return index in self._marked and mark in self._marked[index]
+        return coords in self._marked and mark in self._marked[coords]
 
     def print2D(self, minCoords=None, maxCoords=None, sep='', default=None):
         assert self._dimension == 2, 'Cannot print2D with dimension: %d' % self._dimension
