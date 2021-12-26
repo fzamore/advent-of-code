@@ -100,9 +100,9 @@ def executeSingleBlockBackward(constants, i, w, destZ):
             # reversing integer division is tricky
             # given A = B // C, then to solve for B, do:
             #   B = A * C + [0, C - 1]
-            # for all  integer values in the range [0, C - 1]
+            # for all integer values in the range [0, C - 1]
 
-            # find possible values of z
+            # find possible values of z (I can probably math this without a loop)
             for k in range(0, 26):
                 z = destZ * 26 + k
                 if z % 26 == w - b:
@@ -115,25 +115,23 @@ def executeSingleBlockBackward(constants, i, w, destZ):
     return None
 
 # executes the entire instruction set in reverse
-def executeBackward(constants, wStr, i, wRange, destZs): # todo: change destZs to singleton?
-    if len(destZs) > 1:
-        print('whoa whoa', destZs)
-        return
-
+def executeBackward(constants, wStr, i, destZ):
     newZs = []
-    for w in wRange:
-        for destZ in destZs:
-            newZ = executeSingleBlockBackward(constants, i, w, destZ)
-            if newZ != None:
-                newZs.append((w, newZ))
+    for w in range(9, 0, -1): # start with 9 to find highest number first
+        newZ = executeSingleBlockBackward(constants, i, w, destZ)
+        if newZ != None:
+            newZs.append((w, newZ))
 
     result = []
     for w, newZ in newZs:
         newWStr = str(w) + wStr
         if i == 0:
+            assert newZ == 0, 'bad result at i == 0'
+            # base case
             result.append(newWStr)
         else:
-            subResults = executeBackward(constants, newWStr, i - 1, wRange, [newZ])
+            # recursive case
+            subResults = executeBackward(constants, newWStr, i - 1, newZ)
             result.extend(subResults)
     return result
 
@@ -174,6 +172,7 @@ def parseInput(filename):
     return instructions
 
 def part1():
+    '''
     instructions = parseInput('day24.txt')
     registers = {
         'w': 0,
@@ -188,6 +187,7 @@ def part1():
             inputs[i] = wStr[i]
     executeInstructions(instructions, registers, inputs)
     printRegisters(registers)
+    '''
 
     '''
     inputBlocks = []
@@ -204,7 +204,7 @@ def part1():
     return
     '''
 
-    # solve the problem
+    # solve the puzzle
     constants = {
         'a': [1, 1, 1, 1, 26, 1, 1, 26, 1, 26, 26, 26, 26, 26],
         'b': [15, 11, 10, 12, -11, 11, 14, -6, 10, -6, -6, -16, -4, -2],
@@ -214,10 +214,9 @@ def part1():
     # highest: 29991993698469
     # lowest: 14691271141118
 
-    wRange = range(9, 0, -1) # part 1: find highest
-    #wRange = range(1, 10) # part 2: find lowest
-    result = executeBackward(constants, '', 13, wRange, [0])
-    print('count', len(result))
-    print(result[0])
+    result = executeBackward(constants, '', 13, 0)
+    print('result count', len(result))
+    print(result[0]) # part 1
+    print(result[-1]) # part 2
 
 part1()
