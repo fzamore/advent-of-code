@@ -81,7 +81,7 @@ def makeMoveMap():
     return moveMap
 
 def serialize(positions):
-    return \
+    s = \
         positions['A1'] + ',' + \
         positions['A2'] + ',' + \
         positions['B1'] + ',' + \
@@ -91,10 +91,22 @@ def serialize(positions):
         positions['D1'] + ',' + \
         positions['D2']
 
+    if 'A3' in positions:
+        s += ',' + \
+             positions['A3'] + ',' + \
+             positions['A4'] + ',' + \
+             positions['B3'] + ',' + \
+             positions['B4'] + ',' + \
+             positions['C3'] + ',' + \
+             positions['C4'] + ',' + \
+             positions['D3'] + ',' + \
+             positions['D4']
+    return s
+
 def deserialize(s):
     v = s.split(',')
-    assert len(v) == 8, 'bad serialization: %s' % s
-    return {
+    assert len(v) == 8 or len(v) == 16, 'bad serialization: %s' % s
+    d = {
         'A1': v[0],
         'A2': v[1],
         'B1': v[2],
@@ -104,6 +116,16 @@ def deserialize(s):
         'D1': v[6],
         'D2': v[7],
     }
+    if len(v) == 16:
+        d['A3'] = v[8]
+        d['A4'] = v[9]
+        d['B3'] = v[10]
+        d['B4'] = v[11]
+        d['C3'] = v[12]
+        d['C4'] = v[13]
+        d['D3'] = v[14]
+        d['D4'] = v[15]
+    return d
 
 def isDone(positions):
     for amph in positions:
@@ -121,8 +143,10 @@ def isPathClear(reversePositions, path):
     return True
 
 def tryEnterRoom(amph, amphCell, reversePositions, moveMap):
+    backCell = 4 if ('a4', 'd4') in moveMap else 2
+
     # try room cells from back to front
-    for r in range(2, 0, -1):
+    for r in range(backCell, 0, -1):
         roomCell = amph[0].lower() + str(r)
         if isCellOccupied(reversePositions, roomCell):
             if reversePositions[roomCell][0] != amph[0]:
@@ -241,27 +265,36 @@ def printCave(positions):
             print('.', end='')
     print('#')
 
+    rooms = ['a', 'b', 'c', 'd']
+
     # line 1
     print('###', end='')
-    print(reversePositions['a1'][0], end='')
-    print('#', end='')
-    print(reversePositions['b1'][0], end='')
-    print('#', end='')
-    print(reversePositions['c1'][0], end='')
-    print('#', end='')
-    print(reversePositions['d1'][0], end='')
-    print('###')
+    for r in rooms:
+        print(reversePositions['%s1' % r][0], end='')
+        print('#', end='')
+    print('##')
 
     # line 2
     print('  #', end='')
-    print(reversePositions['a2'][0], end='')
-    print('#', end='')
-    print(reversePositions['b2'][0], end='')
-    print('#', end='')
-    print(reversePositions['c2'][0], end='')
-    print('#', end='')
-    print(reversePositions['d2'][0], end='')
-    print('#')
+    for r in rooms:
+        print(reversePositions['%s2' % r][0], end='')
+        print('#', end='')
+    print()
+
+    if 'a3' in reversePositions:
+        # line 3
+        print('  #', end='')
+        for r in rooms:
+            print(reversePositions['%s3' % r][0], end='')
+            print('#', end='')
+        print()
+
+        # line 4
+        print('  #', end='')
+        for r in rooms:
+            print(reversePositions['%s4' % r][0], end='')
+            print('#', end='')
+        print()
 
     # bottom
     print('  #########  ')
@@ -311,4 +344,100 @@ def part1():
     printCave(positions)
     print(score)
 
-part1()
+def part2():
+    positions = {}
+
+    with open('day23.txt') as f:
+        caveMap = {
+            3: 'a',
+            5: 'b',
+            7: 'c',
+            9: 'd',
+        }
+        seenValues = set()
+
+        f.readline()
+        f.readline()
+        line1 = f.readline()
+        for i in caveMap:
+            v = line1[i]
+            amph = v + '1'
+            amph = v + '2' if amph in seenValues else amph
+            seenValues.add(amph)
+            positions[amph] = caveMap[i] + '1'
+
+        line2 = f.readline()
+        for i in caveMap:
+            v = line2[i]
+            amph = v + '1'
+            amph = v + '2' if amph in seenValues else amph
+            seenValues.add(amph)
+            positions[amph] = caveMap[i] + '4'
+
+    # add part 2 input
+    #D#C#B#A#
+    #D#B#A#C#
+    positions['D3'] = 'a2'
+    positions['D4'] = 'a3'
+    positions['C3'] = 'b2'
+    positions['B3'] = 'b3'
+    positions['B4'] = 'c2'
+    positions['A3'] = 'c3'
+    positions['A4'] = 'd2'
+    positions['C4'] = 'd3'
+
+    print('initial position:')
+    printCave(positions)
+
+    moveMap = makeMoveMap()
+
+    # add new entries to movemap
+    for r in ['a', 'b', 'c', 'd']:
+        room1Cell = '%s1' % r
+        room2Cell = '%s2' % r
+        room3Cell = '%s3' % r
+        room4Cell = '%s4' % r
+        # add moves from room to hallway and vice-versa
+        for h in [0, 1, 3, 5, 7, 9, 10]:
+            hallwayCell = 'h%d' % h
+            room2moves = moveMap[(room2Cell, hallwayCell)]
+            hallwayMoves = moveMap[(hallwayCell, room2Cell)]
+
+            moveMap[(room3Cell, hallwayCell)] = [room2Cell] + room2moves
+            moveMap[(hallwayCell, room3Cell)] = hallwayMoves + [room3Cell]
+
+            moveMap[(room4Cell, hallwayCell)] = [room3Cell, room2Cell] + room2moves
+            moveMap[(hallwayCell, room4Cell)] = hallwayMoves + [room3Cell, room4Cell]
+
+        # add room-to-room moves
+        for otherR in ['a', 'b', 'c', 'd']:
+            if r == otherR:
+                continue
+
+            otherRoom1Cell = '%s1' % otherR
+            otherRoom2Cell = '%s2' % otherR
+            otherRoom3Cell = '%s3' % otherR
+            otherRoom4Cell = '%s4' % otherR
+
+            roomToRoomMoves = [room1Cell] + moveMap[(room1Cell, otherRoom1Cell)]
+
+            moveMap[(room3Cell, otherRoom1Cell)] = [room2Cell] + roomToRoomMoves
+            moveMap[(room4Cell, otherRoom1Cell)] = [room3Cell, room2Cell] + roomToRoomMoves
+            moveMap[(room3Cell, otherRoom2Cell)] = [room2Cell] + roomToRoomMoves + [otherRoom2Cell]
+            moveMap[(room4Cell, otherRoom2Cell)] = [room3Cell, room2Cell] + roomToRoomMoves + [otherRoom2Cell]
+            moveMap[(room3Cell, otherRoom3Cell)] = moveMap[(room3Cell, otherRoom2Cell)] + [otherRoom3Cell]
+            moveMap[(room4Cell, otherRoom3Cell)] = moveMap[(room4Cell, otherRoom2Cell)] + [otherRoom3Cell]
+            moveMap[(room3Cell, otherRoom4Cell)] = moveMap[(room3Cell, otherRoom3Cell)] + [otherRoom4Cell]
+            moveMap[(room4Cell, otherRoom4Cell)] = moveMap[(room4Cell, otherRoom3Cell)] + [otherRoom4Cell]
+
+    #for cell in moveMap:
+    #   print(cell, ':', moveMap[cell])
+    print('movemap entries:', len(moveMap))
+
+    print('moving...')
+    score, positions = dijkstra(positions, moveMap)
+    print('done. final position:')
+    printCave(positions)
+    print(score)
+
+part2()
