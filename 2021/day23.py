@@ -120,22 +120,23 @@ def isPathClear(reversePositions, path):
             return False
     return True
 
-def canEnterRoom2(amph, amphCell, reversePositions, moveMap):
-    room2Cell = amph[0].lower() + '2'
-    if isCellOccupied(reversePositions, room2Cell):
-        return False
-    return isPathClear(reversePositions, moveMap[(amphCell, room2Cell)])
+def tryEnterRoom(amph, amphCell, reversePositions, moveMap):
+    # try room cells from back to front
+    for r in range(2, 0, -1):
+        roomCell = amph[0].lower() + str(r)
+        if isCellOccupied(reversePositions, roomCell):
+            if reversePositions[roomCell][0] != amph[0]:
+                # if there's an amphipod of a differing type in this room, we can't enter
+                return None
+            # otherwise, there's an amphipod of the same type in the
+            # cell, so keep checking other cells in the room
+            continue
 
-def canEnterRoom1(amph, amphCell, reversePositions, moveMap):
-    room1Cell = amph[0].lower() + '1'
-    if isCellOccupied(reversePositions, room1Cell):
-        return False
+        if isPathClear(reversePositions, moveMap[(amphCell, roomCell)]):
+            # the path to this cell is clear. move into it
+            return roomCell
 
-    room2Cell = amph[0].lower() + '2'
-    if isCellOccupied(reversePositions, room2Cell) and reversePositions[room2Cell][0] != amph[0]:
-        return False
-
-    return isPathClear(reversePositions, moveMap[(amphCell, room1Cell)])
+    return None
 
 def getNextPositions(positions, reversePositions, moveMap):
     weights = {
@@ -155,18 +156,11 @@ def getNextPositions(positions, reversePositions, moveMap):
 
         if inHallway:
             # if any amphipod can enter home, that should be the next move
-            if canEnterRoom2(amph, amphCell, reversePositions, moveMap):
-                room2Cell = amph[0].lower() + '2'
+            roomCell = tryEnterRoom(amph, amphCell, reversePositions, moveMap)
+            if roomCell:
                 curNextPositions = deepcopy(positions)
-                curNextPositions[amph] = room2Cell
-                score = weight * len(moveMap[(amphCell, room2Cell)])
-                return [(curNextPositions, score)]
-
-            if canEnterRoom1(amph, amphCell, reversePositions, moveMap):
-                room1Cell = amph[0].lower() + '1'
-                curNextPositions = deepcopy(positions)
-                curNextPositions[amph] = room1Cell
-                score = weight * len(moveMap[(amphCell, room1Cell)])
+                curNextPositions[amph] = roomCell
+                score = weight * len(moveMap[(amphCell, roomCell)])
                 return [(curNextPositions, score)]
 
             # otherwise, if we're already in the hallway, we can't move
