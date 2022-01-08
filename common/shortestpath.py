@@ -1,5 +1,4 @@
 from collections import defaultdict
-from collections.abc import Hashable
 from heapq import heappush, heappop
 
 # Implementation of Dijkstra's shortest-path algorithm.
