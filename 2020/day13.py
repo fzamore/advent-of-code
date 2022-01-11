@@ -1,13 +1,6 @@
 from common.io import readfile
 import math
 
-def verify(buses, guessi, guess):
-    for i in buses:
-        diff = i - guessi
-        if (guess + diff) % buses[i] != 0:
-            return False
-    return True
-
 # Using Chinese Remainder Theorem: https://brilliant.org/wiki/chinese-remainder-theorem/
 def solve(buses, i, x, m):
     x2, m2 = buses[i]
