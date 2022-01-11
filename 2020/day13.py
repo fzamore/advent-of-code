@@ -2,6 +2,7 @@ from common.io import readfile
 import math
 
 # Using Chinese Remainder Theorem: https://brilliant.org/wiki/chinese-remainder-theorem/
+# t = x (mod m), for all (x, m) pairs
 def solve(buses, i, x, m):
     x2, m2 = buses[i]
     inv = pow(m, -1, m2) # third param is modulus
