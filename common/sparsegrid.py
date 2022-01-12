@@ -74,8 +74,12 @@ class SparseGrid:
                 continue
             yield adjCoords
 
-    def getAllCoordsInOrder(self):
-        return _nDimRange(self._dimension, self._minCoords, self._maxCoords)
+    def getAllCoordsInOrder(self, minCoords=None, maxCoords=None):
+        if not minCoords:
+            minCoords = self._minCoords
+        if not maxCoords:
+            maxCoords = self._maxCoords
+        return _nDimRange(self._dimension, tuple(minCoords), tuple(maxCoords))
 
     def getAllCoords(self):
         return list(self._map.keys())
