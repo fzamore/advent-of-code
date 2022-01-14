@@ -1,22 +1,19 @@
 from common.io import readfile
 import math
 
-def resolve(v, evalFunc):
-    if isinstance(v, int):
-        return v
-    if isinstance(v, list):
-        return evalFunc(v)
-    assert False, 'bad v in expr: %s' % v
-
 def evaluate(expr):
-    result = resolve(expr[0], evaluate)
+    if isinstance(expr, int):
+        return expr
+    assert isinstance(expr, list), 'bad expr: %s' % expr
+
+    result = evaluate(expr[0])
     i = 1
     while i < len(expr):
         op = expr[i]
         i += 1
         assert op in ['+', '*'], 'expected operator: %s' % op
 
-        opnd = resolve(expr[i], evaluate)
+        opnd = evaluate(expr[i])
         i += 1
         match op:
             case '+':
@@ -30,14 +27,18 @@ def evaluate(expr):
 
 # evaluate, but give addition precedence
 def evaluate2(expr):
-    result = [resolve(expr[0], evaluate2)]
+    if isinstance(expr, int):
+        return expr
+    assert isinstance(expr, list), 'bad expr: %s' % expr
+
+    result = [evaluate2(expr[0])]
     i = 1
     while i < len(expr):
         op = expr[i]
         i += 1
         assert op in ['+', '*'], 'expected operator: %s' % op
 
-        opnd = resolve(expr[i], evaluate2)
+        opnd = evaluate2(expr[i])
         i += 1
         match op:
             case '+':
