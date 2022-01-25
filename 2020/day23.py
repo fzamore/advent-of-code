@@ -63,7 +63,7 @@ def part1():
   print(''.join([str(x) for x in ans]))
 
 def part2():
-  # `cups` is a 1-indexed array where each index stores a tuple with the 
+  # `cups` is a 1-indexed array where each index stores the
   # next cup for that label, in clockwise order. Essentially, 
   # a singly-linked list stored in an array indexed by cup label.
   # cups[0] is always `None`
