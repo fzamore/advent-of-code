@@ -1,9 +1,10 @@
 from common.io import readfile
 from common.sparsegrid import SparseGrid
+from typing import *
 
 # tiles are represented via a SparseGrid. Each entry in the grid represents a black tile
 
-def getDeltas():
+def getDeltas() -> Dict[str, Tuple[int, int]]:
   return {
     'nw': (-1, 1),
     'ne': (1, 1),
@@ -13,10 +14,10 @@ def getDeltas():
     'w': (-2, 0),
   }
 
-def getDelta(s):
+def getDelta(s: str):
   return getDeltas()[s]
   
-def flip(grid, tile):
+def flip(grid: SparseGrid, tile: List[str]) -> None:
   x, y = (0, 0)
   for s in tile:
     dx, dy = getDelta(s)
@@ -29,20 +30,20 @@ def flip(grid, tile):
   else:
     grid.setValue(c, 1)
 
-def getAdjacentCoords(coords):
+def getAdjacentCoords(coords: Tuple[int, int]) -> Iterator[Tuple[int, int]]:
   deltas = getDeltas().values()
   x, y = coords
   for dx, dy in getDeltas().values():
     yield (x + dx, y + dy)
     
-def countAdjacentBlackTiles(grid, coords):
+def countAdjacentBlackTiles(grid: SparseGrid, coords: Tuple[int, int]) -> int:
   c = 0
   for nx, ny in getAdjacentCoords(coords):
     if grid.hasValue((nx, ny)):
       c += 1
   return c
 
-def step(grid):
+def step(grid: SparseGrid) -> SparseGrid:
   newgrid = SparseGrid(2)
   whiteTilesToConsider = set()
   for coords in grid.getAllCoords():
@@ -104,7 +105,7 @@ def part2():
     tiles.append(tile)
 
   print('tiles', len(tiles))
-
+  
   grid = SparseGrid(2)
   for tile in tiles:
     flip(grid, tile)
