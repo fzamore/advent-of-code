@@ -1,14 +1,15 @@
 from dataclasses import dataclass
 import math
+from typing import Optional
 
 @dataclass
 class Node:
     depth: int
     value: int = -1
-    leftChild: 'Node' = None
-    rightChild: 'Node' = None
-    inorderPrev: 'Node' = None
-    inorderNext: 'Node' = None
+    leftChild: Optional['Node'] = None
+    rightChild: Optional['Node'] = None
+    inorderPrev: Optional['Node'] = None
+    inorderNext: Optional['Node'] = None
 
 def increaseDepths(node):
     if node == None:
