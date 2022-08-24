@@ -1,10 +1,10 @@
 from common.io import readfile
-from common.sparsegrid import SparseGrid
-from typing import *
+from common.sparsegrid import SparseGrid, Coords
+from typing import Iterator
 
 # tiles are represented via a SparseGrid. Each entry in the grid represents a black tile
 
-def getDeltas() -> Dict[str, Tuple[int, int]]:
+def getDeltas() -> dict[str, Coords]:
   return {
     'nw': (-1, 1),
     'ne': (1, 1),
@@ -14,10 +14,10 @@ def getDeltas() -> Dict[str, Tuple[int, int]]:
     'w': (-2, 0),
   }
 
-def getDelta(s: str):
+def getDelta(s: str) -> Coords:
   return getDeltas()[s]
-  
-def flip(grid: SparseGrid, tile: List[str]) -> None:
+
+def flip(grid: SparseGrid, tile: list[str]) -> None:
   x, y = (0, 0)
   for s in tile:
     dx, dy = getDelta(s)
@@ -30,13 +30,13 @@ def flip(grid: SparseGrid, tile: List[str]) -> None:
   else:
     grid.setValue(c, 1)
 
-def getAdjacentCoords(coords: Tuple[int, int]) -> Iterator[Tuple[int, int]]:
+def getAdjacentCoords(coords: Coords) -> Iterator[Coords]:
   deltas = getDeltas().values()
   x, y = coords
   for dx, dy in getDeltas().values():
     yield (x + dx, y + dy)
-    
-def countAdjacentBlackTiles(grid: SparseGrid, coords: Tuple[int, int]) -> int:
+
+def countAdjacentBlackTiles(grid: SparseGrid, coords: Coords) -> int:
   c = 0
   for nx, ny in getAdjacentCoords(coords):
     if grid.hasValue((nx, ny)):
@@ -51,7 +51,7 @@ def step(grid: SparseGrid) -> SparseGrid:
     if adjacentBlackTiles > 0 and adjacentBlackTiles <= 2:
       # black tile stays black
       newgrid.setValue(coords, 1)
-    
+
     # add all adjacent tiles to this black tile to the list of white tiles to consider
     whiteTilesToConsider |= set(getAdjacentCoords(coords))
 
@@ -59,10 +59,10 @@ def step(grid: SparseGrid) -> SparseGrid:
     if not grid.hasValue(coords) and countAdjacentBlackTiles(grid, coords) == 2:
       # white tile with exactly two adjacent black tiles. flip
       newgrid.setValue(coords, 1)
-  
+
   return newgrid
 
-def part1():
+def part1() -> None:
   tiles = []
   for line in readfile('day24.txt'):
     tile = []
@@ -84,16 +84,16 @@ def part1():
   grid = SparseGrid(2)
   for tile in tiles:
     flip(grid, tile)
-  
+
   print(len(grid.getAllCoords()))
 
-def part2():
+def part2() -> None:
   tiles = []
   for line in readfile('day24.txt'):
-    tile = []
+    tile: list[str] = []
     i = 0
     while i < len(line):
-      c = line[i]
+      c: str = line[i]
       if c in ['n', 's']:
         tile.append(line[i:i+2])
         i += 2
@@ -105,7 +105,7 @@ def part2():
     tiles.append(tile)
 
   print('tiles', len(tiles))
-  
+
   grid = SparseGrid(2)
   for tile in tiles:
     flip(grid, tile)
@@ -114,7 +114,7 @@ def part2():
   for i in range(0, n):
     print('day', i, len(grid.getAllCoords()))
     grid = step(grid)
-  
+
   print(len(grid.getAllCoords()))
 
 part2()
