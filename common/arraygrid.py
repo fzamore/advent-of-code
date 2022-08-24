@@ -1,17 +1,19 @@
+from typing import Any, Hashable
+
 class ArrayGrid:
-    def __init__(self, maxX, maxY):
+    def __init__(self, maxX: int, maxY: int) -> None:
         self._maxX = maxX
         self._maxY = maxY
         self._grid = [None] * self._maxX * self._maxY
         self._gridLen = self._maxX * self._maxY
 
-    def getMaxX(self):
+    def getMaxX(self) -> int:
         return self._maxX
 
-    def getMaxY(self):
+    def getMaxY(self) -> int:
         return self._maxY
 
-    def getValue(self, x, y, default=None):
+    def getValue(self, x: int, y: int, default: Any = None) -> Any:
         i = self._gridIndex(x, y)
         if i < 0 or i >= self._gridLen:
             if default:
@@ -19,12 +21,12 @@ class ArrayGrid:
             assert False, 'Invalid grid coordinates: (%d, %d)' % (x, y)
         return self._grid[i]
 
-    def setValue(self, x, y, value):
+    def setValue(self, x: int, y: int, value: Any) -> None:
         i = self._gridIndex(x, y)
         assert i >= 0 and i < self._gridLen, 'Invalid grid coordinates: (%d, %d)' % (x, y)
         self._grid[i] = value
 
-    def print2D(self, charMap={}):
+    def print2D(self, charMap: dict[Hashable, Hashable] = {}) -> None:
         print()
         for y in range(0, self._maxY):
             for x in range(0, self._maxX):
@@ -35,5 +37,5 @@ class ArrayGrid:
             print()
         print()
 
-    def _gridIndex(self, x, y):
+    def _gridIndex(self, x: int, y: int) -> int:
         return y * self._maxX + x

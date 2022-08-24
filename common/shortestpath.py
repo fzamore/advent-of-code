@@ -1,20 +1,27 @@
 from collections import defaultdict
 from heapq import heappush, heappop
+from typing import Any, Callable, DefaultDict, Hashable, Iterator, Tuple
 
 # Implementation of Dijkstra's shortest-path algorithm.
 # Params:
 #  startNode (hashable): start node. distance to this node will always be zero
-#  getAdjacentNodes (node => list of (node, distance) tuples): nodes adjacent to given node
-#  isDestNode (node => Boolean): whether this node is a destination, and the algorithm can terminate
+#  getAdjacentNodes (node => list of (node, distance) tuples): nodes adjacent
+#       to given node
+#  isDestNode (node => Boolean): whether this node is a destination, andM the
+#       algorithm can terminate
 # Return value:
 #  (node, distance) tuple for destination node and distance to that node
-def dijkstra(startNode, getAdjacentNodes, isDestNode):
+def dijkstra(
+    startNode: Hashable,
+    getAdjacentNodes: Callable[[Hashable], Iterator[Tuple[Hashable, float]]],
+    isDestNode: Callable[[Hashable], bool],
+) -> Tuple[Hashable, float]:
 
     # min-heap priority queue of points with distance from start as the key
-    q = []
+    q: list[Any] = []
 
     # map from point to distance from start
-    d = defaultdict(lambda: float('inf'))
+    d: DefaultDict[Hashable, float] = defaultdict(lambda: float('inf'))
 
     # set of visited nodes, so we don't visit nodes more than once
     # (because we can't updated entries in the priority queue)
