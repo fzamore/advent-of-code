@@ -1,10 +1,10 @@
-from common.io import readfile
+from common.readfile import readfile
 
 def transform(n, s=7):
   # Python has fast modular exponentiation by default
   return pow(s, n, 20201227)
-  
-# Squaring exponentiation algorithm copied from 
+
+# Squaring exponentiation algorithm copied from
 # https://en.wikipedia.org/wiki/Modular_exponentiation
 '''
 def transform2(n, s=7):
@@ -46,7 +46,7 @@ def part1():
   print('loop size 1', loop1)
   loop2 = findLoopSize2(pub2)
   print('loop size 2', loop2)
-  
+
   enc1 = transform(loop2, pub1)
   enc2 = transform(loop1, pub2)
   assert enc1 == enc2, 'bad encryption keys: %d, %d' % (enc1, enc2)

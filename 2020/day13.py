@@ -1,4 +1,4 @@
-from common.io import readfile
+from common.readfile import readfile
 import math
 
 # Using Chinese Remainder Theorem: https://brilliant.org/wiki/chinese-remainder-theorem/

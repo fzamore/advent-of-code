@@ -1,4 +1,4 @@
-from common.io import readfile
+from common.readfile import readfile
 
 def step(cups, curi):
   cupsLen = len(cups)
@@ -64,7 +64,7 @@ def part1():
 
 def part2():
   # `cups` is a 1-indexed array where each index stores the
-  # next cup for that label, in clockwise order. Essentially, 
+  # next cup for that label, in clockwise order. Essentially,
   # a singly-linked list stored in an array indexed by cup label.
   # cups[0] is always `None`
 
@@ -75,7 +75,7 @@ def part2():
   l = len(values)
   for i in range(0, l - 1):
     cups[values[i]] = values[i + 1]
-  
+
   # add extra cups
   cups[values[l - 1]] = max(values) + 1
   for i in range(max(values) + 1, maxCup):
@@ -83,11 +83,11 @@ def part2():
   cups[maxCup] = values[0]
 
   cur = values[0]
-  
+
   n = 10000000
   for i in range(0, n):
     cur = step2(cups, cur)
-  
+
   oneN = cups[1]
   oneNN = cups[oneN]
   print(oneN, oneNN, oneN * oneNN)

@@ -1,4 +1,4 @@
-from common.io import readfile
+from common.readfile import readfile
 from common.sparsegrid import SparseGrid
 import math
 
@@ -52,12 +52,12 @@ def computeAdjacencies(tileEdges):
 
 def getOppositeEdge(edge):
   return {1: 3, 2: 4, 3: 1, 4: 2}[edge]
-  
+
 def getNextEdge(edge, direction):
   assert direction in [1, -1], 'invalid direction: %s' % direction
   edges = [1, 2, 3, 4]
   return edges[(((edge - 1) + direction) % 4)]
-  
+
 def computeTileGrid(adjacencies):
   # find an arbitrary corner tile and assign it to (0,0)
   cornerTileID = None
@@ -67,11 +67,11 @@ def computeTileGrid(adjacencies):
       break
 
   sideLen = int(math.sqrt(len(adjacencies)))
-  
+
   e1, e2 = list(adjacencies[cornerTileID].keys())
   rightEdge = e1 if ((e1 % 4) + 1) == e2 else e2
   topEdge = getNextEdge(rightEdge, -1)
-  
+
   tileGrid = {(0, 0): (cornerTileID, topEdge, 1)}
   print((0, 0), cornerTileID)
 
@@ -83,8 +83,8 @@ def computeTileGrid(adjacencies):
     # compute polarity based on previous tile polarity and this tile's polarity
     polarity = prevPolarity * nextPolarity
     tileGrid[(x, 0)] = (
-      nextTileID, 
-      getNextEdge(nextLeftEdge, polarity), 
+      nextTileID,
+      getNextEdge(nextLeftEdge, polarity),
       polarity,
     )
     print((x, 0), nextTileID, polarity)
@@ -95,7 +95,7 @@ def computeTileGrid(adjacencies):
       prevTileID, prevTopEdge, prevPolarity = tileGrid[(x, y - 1)]
       prevBottomEdge = getOppositeEdge(prevTopEdge)
       nextTileID, nextTopEdge, nextPolarity = adjacencies[prevTileID][prevBottomEdge]
-      # compute polarity based on previous tile polarity and this tile's polarity 
+      # compute polarity based on previous tile polarity and this tile's polarity
       # relative to the previous tile's polarity
       polarity = prevPolarity * nextPolarity
       tileGrid[(x, y)] = (nextTileID, nextTopEdge, polarity)
@@ -103,8 +103,8 @@ def computeTileGrid(adjacencies):
 
   return tileGrid
 
-# translates a given (x, y) coordinate, by rotating it so that the top edge 
-# is identified by topEdge and so that it matches the given polarity. 
+# translates a given (x, y) coordinate, by rotating it so that the top edge
+# is identified by topEdge and so that it matches the given polarity.
 # gridSize is the side lenth of a square grid
 def translateCoords(coords, topEdge, polarity, gridSize):
   x, y = coords
@@ -134,7 +134,7 @@ def translateCoords(coords, topEdge, polarity, gridSize):
 def computeCellGrid(tileGrid, tiles):
   grid = SparseGrid(2)
   sideLen = int(math.sqrt(len(tileGrid)))
-  
+
   for tx in range(0, sideLen):
     for ty in range(0, sideLen):
       tileID, topEdge, polarity = tileGrid[(tx, ty)]
@@ -161,9 +161,9 @@ def computeCellGrid(tileGrid, tiles):
 
 def getMonsterGrid():
   # sea monster pattern:
-  #                      # 
+  #                      #
   #    #    ##    ##    ###
-  #     #  #  #  #  #  #  
+  #     #  #  #  #  #  #
   #
   coords = [
     (18, 0),
@@ -190,7 +190,7 @@ def getMonsterGrid():
 def hasMonster(grid, monsterGrid, coords, topEdge, polarity):
   monsterGridSize = \
     monsterGrid.getMaxCoords()[0] - monsterGrid.getMinCoords()[0] + 1
-  
+
   sx, sy = coords
   for monsterCoords in monsterGrid.getAllCoords():
     # orient the monster grid appropriately and check the main grid
@@ -226,7 +226,7 @@ def part1():
       tileID = int(line.split()[1][:-1])
       i += 1
       continue
-    
+
     assert tileID != None, 'missing tileID'
     assert len(line) == 10, 'bad line length: %s' % line
     # edge 1 is initially the top edge
@@ -236,7 +236,7 @@ def part1():
       3: [c for c in lines[i + 9]],
       4: [lines[j][0] for j in range(i, i + 10)],
     }
-    
+
     tileEdges[tileID] = tile
     i += 10
 
@@ -261,13 +261,13 @@ def part2():
       tileID = int(line.split()[1][:-1])
       i += 1
       continue
-    
+
     assert tileID != None, 'missing tileID'
     assert len(line) == 10, 'bad line length: %s' % line
     tileEdge = {
       1: [c for c in line],
       2: [lines[j][9] for j in range(i, i + 10)],
-      3: [c for c in lines[i + 9]], 
+      3: [c for c in lines[i + 9]],
       4: [lines[j][0] for j in range(i, i + 10)],
     }
 
@@ -278,12 +278,12 @@ def part2():
         if c == '#':
           tile.setValue((x, y), '#')
     tiles[tileID] = tile
-    
+
     tileEdges[tileID] = tileEdge
     i += 10
 
   print('tile count', len(tileEdges))
-  
+
   adjacencies = computeAdjacencies(tileEdges)
   print()
 
@@ -306,5 +306,5 @@ def part2():
       c = countMonsters(grid, monsterGrid, topEdge, polarity)
       if c > 0:
         print('countMonsters', topEdge, polarity, c, gridValuesCount - c * monsterSize)
-      
+
 part2()

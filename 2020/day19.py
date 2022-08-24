@@ -1,6 +1,6 @@
-from common.io import readfile
+from common.readfile import readfile
 import re
-  
+
 def parse(rules, ruleStr):
   if ruleStr in ['"a"', '"b"']:
     return ruleStr[1]
@@ -42,7 +42,7 @@ def part1():
   prog = re.compile(parsedRule0)
   count = 0
   for expr in exprs:
-    result = prog.match(expr) 
+    result = prog.match(expr)
     if result != None:
       count += 1
     print(expr, result != None)
@@ -76,7 +76,7 @@ def part2():
   assert parse(rules, rules[8]) == parse(rules, rules[42])
   rule42 = parse(rules, rules[42])
   rule31 = parse(rules, rules[31])
-  
+
   # compile regexes that match the same number of occurrences of rule42 and rule31
   regexes = []
   for i in range(1, 10):
@@ -93,5 +93,5 @@ def part2():
         print('match', i, expr)
         break
   print(count)
-  
+
 part2()

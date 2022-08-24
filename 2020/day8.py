@@ -1,4 +1,4 @@
-from common.io import readfile
+from common.readfile import readfile
 
 def execute(instructions):
     executed = set()

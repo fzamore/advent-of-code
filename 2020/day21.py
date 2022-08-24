@@ -1,4 +1,4 @@
-from common.io import readfile
+from common.readfile import readfile
 
 def part1():
   allergens = {}
@@ -10,7 +10,7 @@ def part1():
     a[-1] = a[-1][:-1] # chomp off trailing )
     ingredients = set(v[0].split())
     ingredientsWithDupes.extend(list(ingredients))
-    
+
     for al in a:
       if al not in allergens:
         allergens[al] = ingredients.copy()
@@ -21,7 +21,7 @@ def part1():
   allergenIngredients = set()
   for als in allergens.values():
     allergenIngredients |= set(als)
-  
+
   print('allergen ingredients', allergenIngredients)
   c = 0
   for i in ingredientsWithDupes:
@@ -37,7 +37,7 @@ def part2():
     a = v[1].split(', ')
     a[-1] = a[-1][:-1] # chomp off trailing )
     ingredients = set(v[0].split())
-    
+
     for al in a:
       if al not in allergens:
         allergens[al] = ingredients.copy()
@@ -61,5 +61,5 @@ def part2():
 
   print()
   print(','.join([canonical[x] for x in [k for k in sorted(canonical.keys())]]))
-  
+
 part2()

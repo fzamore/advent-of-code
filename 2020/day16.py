@@ -1,4 +1,4 @@
-from common.io import readfile
+from common.readfile import readfile
 from collections import defaultdict
 
 def isValidForRange(ranges, value, field):

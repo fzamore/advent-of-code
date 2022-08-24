@@ -1,4 +1,4 @@
-from common.io import readfile
+from common.readfile import readfile
 from common.sparsegrid import SparseGrid
 
 def countAllOccupiedSeats(grid):

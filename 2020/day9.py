@@ -1,4 +1,4 @@
-from common.io import readfile
+from common.readfile import readfile
 
 def isValid(preamble, index, values):
     assert index > preamble - 1, 'bad call to isValid: %d, %d' % (preamble, i)

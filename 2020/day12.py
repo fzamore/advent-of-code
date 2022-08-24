@@ -1,4 +1,4 @@
-from common.io import readfile
+from common.readfile import readfile
 
 def turn(heading, deg):
     assert deg in [90, 180, 270, -90, -180, -270], 'bad turn instruction: %s' % deg

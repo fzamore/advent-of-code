@@ -1,4 +1,4 @@
-from common.io import readfile
+from common.readfile import readfile
 from collections import defaultdict
 
 def serialize(decks):
@@ -25,7 +25,7 @@ def playGame2(decks):
   #print('playing game %d, %s, %s' % (gameNum, p1, p2))
 
   prevGames = set()
-  while len(p1) > 0 and len(p2) > 0:    
+  while len(p1) > 0 and len(p2) > 0:
     serialized = serialize(decks)
     if serialized in prevGames:
       # prevent infinite recursion
@@ -48,7 +48,7 @@ def playGame2(decks):
       losingCard = p1c if subwinner == 2 else p2c
       decks[subwinner].append(winningCard)
       decks[subwinner].append(losingCard)
-    
+
   winner = 1 if len(p2) == 0 else 2
   return winner
 
@@ -65,7 +65,7 @@ def computeScore(deck):
 def part1():
   player = None
   decks = defaultdict(list)
-  for line in readfile('day22.txt'):    
+  for line in readfile('day22.txt'):
     if line == '':
       continue
     if line[0:7] == 'Player ':
@@ -91,7 +91,7 @@ def part1():
 def part2():
   player = None
   decks = defaultdict(list)
-  for line in readfile('day22.txt'):    
+  for line in readfile('day22.txt'):
     if line == '':
       continue
     if line[0:7] == 'Player ':
@@ -104,7 +104,7 @@ def part2():
   winner = playGame2(decks)
   print()
   print('winner: %d. final hand: %s' % (winner, decks[winner]))
-  
+
   print(computeScore(decks[winner]))
 
 part2()

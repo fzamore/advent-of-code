@@ -1,4 +1,4 @@
-from common.io import readfile
+from common.readfile import readfile
 
 def addBitToEachResult(results, bit):
     for i in range(0, len(results)):

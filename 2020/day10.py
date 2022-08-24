@@ -1,4 +1,4 @@
-from common.io import readfile
+from common.readfile import readfile
 
 def countSequences(values, i, table):
     l = len(values)

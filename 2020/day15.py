@@ -1,4 +1,4 @@
-from common.io import readfile
+from common.readfile import readfile
 
 def speak(v, seen, spoken, i):
     #print('speak', i, v)
