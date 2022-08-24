@@ -16,12 +16,21 @@ def dijkstra(startNode, getAdjacentNodes, isDestNode):
     # map from point to distance from start
     d = defaultdict(lambda: float('inf'))
 
+    # set of visited nodes, so we don't visit nodes more than once
+    # (because we can't updated entries in the priority queue)
+    visited = set()
+
     # initialize with the start point
     heappush(q, (0, startNode))
     d[startNode] = 0
 
     while len(q) > 0:
         node = heappop(q)[1]
+
+        if node in visited:
+            continue
+        visited.add(node)
+
         nodeDist = d[node]
         assert nodeDist != float('inf'), 'Missing point in dict for node: %s' % str(node)
 
@@ -30,13 +39,18 @@ def dijkstra(startNode, getAdjacentNodes, isDestNode):
             return (node, nodeDist)
 
         for adjNode, adjNodeDist in getAdjacentNodes(node):
+            if adjNode in visited:
+                # No need to traverse to nodes we've already seen.
+                continue
+
             newDist = nodeDist + adjNodeDist
             if newDist < d[adjNode]:
                 # We've improved the distance to this point. Update the queue
                 # and distance map. We don't need to modify its existing entry
                 # in the priority queue (if it exists) because the new entry
                 # will always be lower, and thus will be popped off the queue
-                # before the existing entry.
+                # before the existing entry. The existing entry will be
+                # subsequently ignored because it's part of the "visited" set.
                 d[adjNode] = newDist
                 heappush(q, (newDist, adjNode))
 
