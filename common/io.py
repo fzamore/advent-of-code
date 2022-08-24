@@ -1,5 +1,5 @@
-def readfile(filename):
-    lines = None
+from typing import Iterable
+
+def readfile(filename: str) -> Iterable[str]:
     with open(filename) as f:
-        lines = f.read().splitlines()
-    return lines
+        return f.read().splitlines()

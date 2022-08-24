@@ -1,4 +1,4 @@
-from typing import Any, cast, Iterable, Iterator, Optional, Sized
+from typing import Any, Iterator, Optional, Sized
 
 # Type for an individual coordinate value. We only support integer coordinates.
 Coord = int
