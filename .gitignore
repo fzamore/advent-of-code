@@ -4,9 +4,6 @@ day*.txt
 # Backup files
 *.py.bak
 
-# VSCode workspaces
-*.code-workspace
-
 # Mac files
 .DS_Store
 
