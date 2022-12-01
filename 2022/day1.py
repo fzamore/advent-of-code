@@ -1,6 +1,6 @@
 from common.readfile import readfile
 
-def day1():
+def part1():
   a = [0]
   for line in readfile('day1.txt'):
     if line == '':
@@ -10,7 +10,7 @@ def day1():
 
   print(max(a))
 
-def day2():
+def part2():
   a = [0]
   for line in readfile('day1.txt'):
     if line == '':
@@ -20,4 +20,4 @@ def day2():
 
   print(sum(sorted(a, reverse=True)[0:3]))
 
-day2()
+part2()
