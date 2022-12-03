@@ -22,10 +22,8 @@ def part1():
 def part2():
   total = 0
   num = 0
+  sets = {}
   for line in open('day3.txt').read().splitlines():
-    if num % 3 == 0:
-      sets = {}
-
     sets[num % 3] = set(line)
 
     if num % 3 == 2:
@@ -33,8 +31,7 @@ def part2():
       assert(len(v) == 1)
       char = v.pop()
       print(char)
-      s = getScore(char)
-      total += s
+      total += getScore(char)
     num += 1
   print(total)
 
