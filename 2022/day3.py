@@ -11,28 +11,24 @@ def part1():
     c = len(line) // 2
     h1, h2 = line[:c], line[c:]
     assert(len(h1) == len(h2))
-    v = set(h1).intersection(set(h2))
+    v = set(h1) & set(h2)
     assert(len(v) == 1)
-    char = v.pop()
-    s = getScore(char)
-    print(s)
-    total += s
+    total += getScore(v.pop())
   print(total)
 
 def part2():
   total = 0
   num = 0
-  sets = {}
   for line in open('day3.txt').read().splitlines():
-    sets[num % 3] = set(line)
+    if num % 3 == 0:
+      s = set(line)
+
+    s &= set(line)
 
     if num % 3 == 2:
-      v = set.intersection(*sets.values())
-      assert(len(v) == 1)
-      char = v.pop()
-      print(char)
-      total += getScore(char)
+      assert(len(s) == 1)
+      total += getScore(s.pop())
     num += 1
   print(total)
 
-part2()
+part1()
