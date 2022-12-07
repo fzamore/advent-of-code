@@ -9,16 +9,15 @@ class Filetype(Enum):
 
 class Node:
   type: Filetype
-  size: int = 0
-  totalsize: int = 0
-  hasTotalsize: bool = False
-  name: str = ''
+  size: int
+  name: str
   children: dict[str, 'Node']
   parent: 'Node'
 
   def __init__(self, name: str, type: Filetype, parent: Optional['Node']):
-    self.name = name
     self.type = type
+    self.size = 0
+    self.name = name
     self.children = {}
     if parent:
       self.parent = parent
@@ -78,51 +77,32 @@ def parseFilesystem(input: list[str]) -> Node:
 
   return root
 
-def computeFileSizes(n: Node) -> int:
-  if n.hasTotalsize:
-    return n.totalsize
-
+def computeDirSizes(n: Node, sizes: dict[Node, int]) -> int:
+  # good ol' postorder traversal
   if n.type == Filetype.FILE:
-    n.totalsize = n.size
-  else:
-    n.totalsize = sum([computeFileSizes(c) for c in n.children.values()])
+    # don't append file sizes to the output list
+    return n.size
 
-  n.hasTotalsize = True
-  return n.totalsize
-
-def findDirsTotalSizeAtMost(n: Node, size: int, out: list[Node]) -> None:
-  if n.type == Filetype.DIR and n.totalsize <= size:
-    out.append(n)
-  for c in n.children.values():
-    findDirsTotalSizeAtMost(c, size, out)
-
-def findDirsAtLeast(n: Node, size: int, out: list[Node]) -> None:
-  if n.type == Filetype.DIR and n.totalsize >= size:
-    out.append(n)
-  for c in n.children.values():
-    findDirsAtLeast(c, size, out)
+  sizes[n] = sum([computeDirSizes(c, sizes) for c in n.children.values()])
+  return sizes[n]
 
 def part1():
   root = parseFilesystem(input)
-  computeFileSizes(root)
+  sizes = {}
+  computeDirSizes(root, sizes)
 
-  nodes = []
-  findDirsTotalSizeAtMost(root, 100000, nodes)
-  [print(n, n.totalsize) for n in nodes]
-  print(sum([n.totalsize for n in nodes]))
+  print(sum([size for size in sizes.values() if size <= 100000]))
 
 def part2():
   root = parseFilesystem(input)
-  computeFileSizes(root)
+  sizes = {}
+  computeDirSizes(root, sizes)
 
   maximum = 70000000
   unused = 30000000
-  needed = maximum - root.totalsize
+  needed = maximum - sizes[root]
   assert needed < unused, 'premise of puzzle is faulty'
 
-  nodes = []
-  findDirsAtLeast(root, unused - needed, nodes)
-  [print(n, n.totalsize) for n in nodes]
-  print(min([n.totalsize for n in nodes]))
+  print(min([size for size in sizes.values() if size >= unused - needed]))
 
 part2()
