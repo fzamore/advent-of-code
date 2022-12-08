@@ -26,6 +26,9 @@ class ArrayGrid:
         assert i >= 0 and i < self._gridLen, 'Invalid grid coordinates: (%d, %d)' % (x, y)
         self._grid[i] = value
 
+    def areCoordsWithinBounds(self, x: int, y: int) -> bool:
+        return 0 <= x < self.getMaxX() and 0 <= y < self.getMaxY()
+
     def print2D(self, charMap: dict[Hashable, Hashable] = {}) -> None:
         print()
         for y in range(0, self._maxY):
