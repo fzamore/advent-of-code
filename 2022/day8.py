@@ -95,6 +95,9 @@ def part1():
 
   visible = set()
   for dir in Direction:
+    # The overall running time assumes that this set union is constant
+    # time. I think that's a reasonable assumption because I assume it's
+    # hashtable-backed.
     visible |= set(getVisibleCellsFromOneDirection(grid, dir))
   print(len(visible))
 
