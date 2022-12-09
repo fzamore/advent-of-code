@@ -1,17 +1,17 @@
 from typing import Any, Hashable
 
 class ArrayGrid:
-    def __init__(self, maxX: int, maxY: int) -> None:
-        self._maxX = maxX
-        self._maxY = maxY
-        self._grid = [None] * self._maxX * self._maxY
-        self._gridLen = self._maxX * self._maxY
+    def __init__(self, width: int, height: int) -> None:
+        self._width = width
+        self._height = height
+        self._grid = [None] * self._width * self._height
+        self._gridLen = self._width * self._height
 
-    def getMaxX(self) -> int:
-        return self._maxX
+    def getWidth(self) -> int:
+        return self._width
 
-    def getMaxY(self) -> int:
-        return self._maxY
+    def getHeight(self) -> int:
+        return self._height
 
     def getValue(self, x: int, y: int, default: Any = None) -> Any:
         i = self._gridIndex(x, y)
@@ -27,12 +27,12 @@ class ArrayGrid:
         self._grid[i] = value
 
     def areCoordsWithinBounds(self, x: int, y: int) -> bool:
-        return 0 <= x < self.getMaxX() and 0 <= y < self.getMaxY()
+        return 0 <= x < self.getWidth() and 0 <= y < self.getHeight()
 
     def print2D(self, charMap: dict[Hashable, Hashable] = {}) -> None:
         print()
-        for y in range(0, self._maxY):
-            for x in range(0, self._maxX):
+        for y in range(0, self._height):
+            for x in range(0, self._width):
                 v = self.getValue(x, y)
                 if v in charMap:
                     v = charMap[v]
@@ -41,4 +41,4 @@ class ArrayGrid:
         print()
 
     def _gridIndex(self, x: int, y: int) -> int:
-        return y * self._maxX + x
+        return y * self._width + x

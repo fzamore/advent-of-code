@@ -13,11 +13,11 @@ def isCellOccupied(grid, x, y):
 def getNextCell(grid, x, y, v):
     match v:
         case 1:
-            nextX = (x + 1) % grid._maxX
+            nextX = (x + 1) % grid.getWidth()
             nextY = y
         case -1:
             nextX = x
-            nextY = (y + 1) % grid._maxY
+            nextY = (y + 1) % grid.getHeight()
         case _:
             assert False, 'bad value passed to getNextCell: %s (%d, %d)' % (v, x, y)
 
@@ -30,8 +30,8 @@ def isNextCellOccupied(grid, x, y, v):
 def getCellsToMove(grid, value):
     cells = []
 
-    for x in range(0, grid.getMaxX()):
-        for y in range(0, grid.getMaxY()):
+    for x in range(0, grid.getWidth()):
+        for y in range(0, grid.getHeight()):
             v = grid.getValue(x, y)
             if v != value:
                 continue

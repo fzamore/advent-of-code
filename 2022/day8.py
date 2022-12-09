@@ -54,7 +54,7 @@ def getVisibleCellsFromOneDirection(
   if direction in [Direction.NORTH, Direction.WEST]:
     x, y = 0, 0
   else:
-    x, y = grid.getMaxX() - 1, grid.getMaxY() - 1
+    x, y = grid.getWidth() - 1, grid.getHeight() - 1
 
   visible = []
   while grid.areCoordsWithinBounds(x, y):
@@ -91,7 +91,7 @@ def getViewingDistanceInOneDirection(
 # O(nm), since it calls getVisibleCellsFromOneDirection() four times.
 def part1():
   grid = createGrid()
-  print('dimensions: %d x %d' % (grid.getMaxX(), grid.getMaxY()))
+  print('dimensions: %d x %d' % (grid.getWidth(), grid.getHeight()))
 
   visible = set()
   for dir in Direction:
@@ -105,11 +105,11 @@ def part1():
 # grid edge in all four directions.
 def part2():
   grid = createGrid()
-  print('dimensions: %d x %d' % (grid.getMaxX(), grid.getMaxY()))
+  print('dimensions: %d x %d' % (grid.getWidth(), grid.getHeight()))
 
   best = -1
-  for x in range(0, grid.getMaxX()):
-    for y in range(0, grid.getMaxY()):
+  for x in range(0, grid.getWidth()):
+    for y in range(0, grid.getHeight()):
       dist = prod(
         [getViewingDistanceInOneDirection(grid, x, y, d) for d in Direction],
       )
@@ -117,4 +117,4 @@ def part2():
         best = dist
   print(best)
 
-part2()
+part1()
