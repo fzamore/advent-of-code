@@ -4,6 +4,9 @@ from math import prod
 
 input = open('day8.txt').read().splitlines()
 
+# All running times assume the grid is a square, though I believe the code
+# should work if it were a rectangle.
+
 class Direction(Enum):
   NORTH = 1
   EAST = 2
@@ -20,7 +23,7 @@ def createGrid() -> ArrayGrid:
     y += 1
   return grid
 
-# O(m) or O(n). Iterates through exactly one row or column.
+# O(n). Iterates through exactly one row or column.
 def getVisibleCellsInOneLine(
   grid: ArrayGrid,
   sx: int,
@@ -38,9 +41,9 @@ def getVisibleCellsInOneLine(
     y += dy
   return visible
 
-# O(mn). Computes visible cells in each row or col from a single
+# O(n^2). Computes visible cells in each row or col from a single
 # direction. E.g., for NORTH, it computes the visible cells in each column
-# starting from row 0. It will traverse the entire grid once.
+# starting from the top (row 0). It will traverse the entire grid once.
 def getVisibleCellsFromOneDirection(
   grid: ArrayGrid,
   direction: Direction,
@@ -64,7 +67,7 @@ def getVisibleCellsFromOneDirection(
     y += dx
   return visible
 
-# O(m) or O(n). Iterates through at most one entire row or column.
+# O(n). Iterates through at most one entire row or column.
 def getViewingDistanceInOneDirection(
   grid: ArrayGrid,
   x: int,
@@ -95,14 +98,13 @@ def part1():
 
   visible = set()
   for dir in Direction:
-    # The overall running time assumes that this set union is constant
-    # time. I think that's a reasonable assumption because I assume it's
-    # hashtable-backed.
+    # The call to getVisibleCellsFromOneDirection() is O(n^2). Doing a
+    # union with the existing set is O(n), so this entire loop is
+    # O(4 * (O(n^2) + O(n)) = O(n^2).
     visible |= set(getVisibleCellsFromOneDirection(grid, dir))
   print(len(visible))
 
-# O(mn*(m+n)) -> O(n^3) (asuming a square). For each cell, traverse to the
-# grid edge in all four directions.
+# O(n^3). For each cell, traverse to the grid edge in all four directions.
 def part2():
   grid = createGrid()
   print('dimensions: %d x %d' % (grid.getWidth(), grid.getHeight()))
@@ -117,4 +119,4 @@ def part2():
         best = dist
   print(best)
 
-part1()
+part2()
