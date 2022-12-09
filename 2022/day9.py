@@ -16,42 +16,45 @@ def getDelta(dir: str) -> Coords:
 def getDist(c1: Coords, c2: Coords) -> int:
   return max(abs(c2[0] - c1[0]), abs(c2[1] -  c1[1]))
 
+# silly that this isn't a built-in
 def clamp(n: int, smallest: int, largest: int) -> int:
   return max(smallest, min(n, largest))
 
-def computeTailDelta(nhpos: Coords, tpos: Coords) -> Coords:
+# Step the head of the rope by the given delta, which must be exactly one
+# Manhattan unit. This will return the new head position and new tail
+# position (or "next knot" position, in the case of a multi-knot rope).
+def stepHead(hpos: Coords, tpos: Coords, delta: Coords) -> tuple[Coords, Coords]:
+  nhpos = (hpos[0] + delta[0], hpos[1] + delta[1])
+  ntpos = stepTail(nhpos, tpos)
+  return (nhpos, ntpos)
+
+# Steps any tail knot according to the given new head position.
+def stepTail(nhpos: Coords, tpos: Coords) -> Coords:
+  dist = getDist(nhpos, tpos)
+  if dist <= 1:
+    # The head hasn't moved far enough to drag the tail anywhere.
+    return tpos
+
+  assert dist == 2, 'invalid movement'
   # Move the tail toward the head such that the tail moves at most one
-  # unit in each direction.
-  return (
+  # unit in each x-y direction.
+  tdelta = (
     clamp(nhpos[0] - tpos[0], -1, 1),
     clamp(nhpos[1] - tpos[1], -1, 1),
   )
+  return (tpos[0] + tdelta[0], tpos[1] + tdelta[1])
 
-def step(hpos: Coords, tpos: Coords, delta: Coords) -> tuple[Coords, Coords]:
-  nhpos = (hpos[0] + delta[0], hpos[1] + delta[1])
-  dist = getDist(nhpos, tpos)
-  if dist <= 1:
-    # The head hasn't moved far enough to drag the tail anywhere
-    return (nhpos, tpos)
-
-  assert dist == 2, 'invalid movement: %s, %s, %s' % (hpos, tpos, delta)
-  tdelta = computeTailDelta(nhpos, tpos)
-  return (nhpos, (tpos[0] + tdelta[0], tpos[1] + tdelta[1]))
-
+# Steps an entire rope by the given delta, which must be exactly one
+# Manhattan unit.
 def stepRope(rope: Rope, delta: Coords) -> Rope:
   nrope = rope.copy()
   # first, move the head and knot 1, by assuming knot 0 is the head and
   # knot 1 is the tail
-  nrope[0], nrope[1] = step(nrope[0], nrope[1], delta)
+  nrope[0], nrope[1] = stepHead(nrope[0], nrope[1], delta)
 
-  # next, move knots 2-9
+  # next, move knots 2-{n-1}
   for i in range(2, ROPE_LEN):
-    dist = getDist(nrope[i - 1], nrope[i])
-    if dist <= 1:
-      # knot i hasn't moved far enough to cause knot i - 1 to move
-      break
-    tdelta = computeTailDelta(nrope[i - 1], nrope[i])
-    nrope[i] = (nrope[i][0] + tdelta[0], nrope[i][1] + tdelta[1])
+    nrope[i] = stepTail(nrope[i - 1], nrope[i])
 
   return nrope
 
@@ -63,8 +66,8 @@ def part1():
     values = line.split()
     delta, qty = getDelta(values[0]), int(values[1])
     print(values)
-    for i in range(qty):
-      hpos, tpos = step(hpos, tpos, delta)
+    for _ in range(qty):
+      hpos, tpos = stepHead(hpos, tpos, delta)
       allTpos.add(tpos)
     print(hpos, tpos)
   print(len(allTpos))
@@ -76,7 +79,7 @@ def part2():
     values = line.split()
     delta, qty = getDelta(values[0]), int(values[1])
     print(values)
-    for i in range(qty):
+    for _ in range(qty):
       rope = stepRope(rope, delta)
       allTpos.add(rope[-1])
     print(rope)
