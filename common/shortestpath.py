@@ -61,4 +61,5 @@ def dijkstra(
                 d[adjNode] = newDist
                 heappush(q, (newDist, adjNode))
 
-    assert False, 'did not find shortest path'
+    # There was no path from start to finish.
+    return ((-float('inf'), -float('inf')), float('inf'))
