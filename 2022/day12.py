@@ -2,9 +2,11 @@ from typing import Iterator
 from common.arraygrid import ArrayGrid
 from common.shortestpath import dijkstra
 
+Coords = tuple[int, int]
+
 input = open('day12.txt').read().splitlines()
 
-def parseInput(input: list[str]) -> tuple[ArrayGrid, tuple[int, int]]:
+def parseInput(input: list[str]) -> tuple[ArrayGrid, Coords]:
   start = (-1, -1)
   grid = ArrayGrid(len(input[0]), len(input))
   for y in range(grid.getHeight()):
@@ -31,7 +33,7 @@ def getAdjacentCells(
   grid: ArrayGrid,
   x: int,
   y: int,
-) -> Iterator[tuple[tuple[int, int], int]]:
+) -> Iterator[tuple[Coords, int]]:
   deltas = [
     (-1, 0),
     (0, -1),
@@ -74,19 +76,27 @@ def part2():
 
   print('number of start positions:', len(starts))
 
-  bestScore = float('inf')
-  bestStart = (-1, -1)
-  for start in starts:
-    result = dijkstra(
-      start,
-      lambda node: getAdjacentCells(grid, node[0], node[1]),
-      lambda node: isDone(grid, node[0], node[1]),
-    )
-    if result[1] < bestScore:
-      bestScore = result[1]
-      bestStart = start
+  # add a new start position such that it has edges of weight zero to each
+  # of the "real" start positions
+  start = (-1, -1)
+  def getAdjecentCells2(node: Coords) -> Iterator[tuple[Coords, int]]:
+    if node == start:
+      for s in starts:
+        yield (s, 0)
+      return
 
-  print(bestStart)
-  print(bestScore)
+    yield from getAdjacentCells(grid, node[0], node[1])
+
+  def isDone2(node: Coords) -> bool:
+    return node != start and isDone(grid, node[0], node[1])
+
+  result = dijkstra(
+    start,
+    getAdjecentCells2,
+    isDone2,
+  )
+
+  print(result)
+  print(result[1])
 
 part2()

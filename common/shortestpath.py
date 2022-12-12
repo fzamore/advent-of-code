@@ -62,4 +62,4 @@ def dijkstra(
                 heappush(q, (newDist, adjNode))
 
     # There was no path from start to finish.
-    return ((-float('inf'), -float('inf')), float('inf'))
+    return (None, float('inf'))
