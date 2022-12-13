@@ -1,9 +1,11 @@
-from enum import Enum
+from enum import IntEnum
+from functools import cmp_to_key
 import json
 
 input = open('day13.txt').read().split("\n\n")
 
-class Cmp(Enum):
+# IntEnum supports comparisons between ints and enums
+class Cmp(IntEnum):
   CORRECT = -1
   UNKNOWN = 0
   INCORRECT = 1
@@ -65,4 +67,24 @@ def part1():
     i += 1
   print(sum)
 
-part1()
+def part2():
+  lists = []
+  for chunk in input:
+    for line in chunk.splitlines():
+      lists.append(json.loads(line))
+
+  print('number of lists:', len(lists))
+
+  # add divider packets
+  divider1 = [[2]]
+  divider2 = [[6]]
+  lists.extend([divider1, divider2])
+
+  # Python is straight-up cheating.
+  lists = sorted(lists, key=cmp_to_key(compareLists))
+
+  i1 = lists.index(divider1)
+  i2 = lists.index(divider2)
+  print((i1 + 1) * (i2 + 1))
+
+part2()
