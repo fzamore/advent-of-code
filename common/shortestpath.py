@@ -7,7 +7,7 @@ from typing import Any, Callable, DefaultDict, Hashable, Iterator, Tuple
 #  startNode (hashable): start node. distance to this node will always be zero
 #  getAdjacentNodes (node => list of (node, distance) tuples): nodes adjacent
 #       to given node
-#  isDestNode (node => Boolean): whether this node is a destination, andM the
+#  isDestNode (node => bool): whether this node is a destination, and the
 #       algorithm can terminate
 # Return value:
 #  (node, distance) tuple for destination node and distance to that node
