@@ -1,10 +1,11 @@
-from common.sparsegrid import Coords, SparseGrid
+from typing import Callable, Optional
+from common.sparsegrid import Coord, Coords, SparseGrid
 from itertools import pairwise
 
 input = open('day14.txt').read().splitlines()
 
-START = (500, 0)
-INF = (0, -1) # Impossible for the sand to float up, so use this as a marker.
+START: Coords = (500, 0)
+INF: Coords = (0, -1) # Impossible for the sand to float up, so use this as a marker.
 
 def addLineToGrid(grid: SparseGrid, line: str) -> None:
   pairs = pairwise(line.split(' -> '))
@@ -23,13 +24,14 @@ def addLineToGrid(grid: SparseGrid, line: str) -> None:
     # the loop stops too early
     grid.setValue((x2, y2), '#')
 
-def hasFallenTooFar(grid: SparseGrid, coords: Coords) -> bool:
-  # Past the bottom of the lowest rock.
-  return coords[1] > grid.getMaxCoords()[1]
-
-def getNextSandCoords(grid: SparseGrid, coords: Coords) -> Coords:
-  if hasFallenTooFar(grid, coords):
-    return INF
+def getNextSandCoords(
+  grid: SparseGrid,
+  coords: Coords,
+  boundaryCheck: Callable[[Coords], Optional[Coords]],
+) -> Coords:
+  if (result := boundaryCheck(coords)):
+    # If the boundary check returns a result, we're done, and return that result.
+    return result
 
   x, y = coords
   deltas = [
@@ -46,13 +48,16 @@ def getNextSandCoords(grid: SparseGrid, coords: Coords) -> Coords:
   # The sand was unable to move. Return its current position.
   return coords
 
-def addSand(grid: SparseGrid, start: Coords = START) -> Coords:
-  cur, next = start, start
-  while (next := getNextSandCoords(grid, cur)) not in [INF, cur]:
+def addSand(
+  grid: SparseGrid,
+  boundaryCheck: Callable[[Coords], Optional[Coords]],
+) -> Coords:
+  cur = START
+  while (next := getNextSandCoords(grid, cur, boundaryCheck)) not in [INF, cur]:
     cur = next
 
   if next != INF:
-    # Add the sand to the grid.
+    # The sand has come to rest somewhere. Add it to the grid.
     grid.setValue(next, 'o')
   return next
 
@@ -68,8 +73,12 @@ def part1():
   grid.print2D(default='.')
   print('')
 
+  def boundaryCheck(coords: Coords) -> Optional[Coords]:
+    # Past the bottom of the lowest rock means the sand will fall forever.
+    return INF if coords[1] > grid.getMaxCoords()[1] else None
+
   i = 0
-  while addSand(grid) != INF:
+  while addSand(grid, boundaryCheck) != INF:
     i += 1
 
   print('FINISHED GRID')
@@ -77,4 +86,28 @@ def part1():
   print('')
   print(i)
 
-part1()
+def part2():
+  print('line count:', len(input))
+
+  grid = SparseGrid(2)
+  for line in input:
+    addLineToGrid(grid, line)
+
+  maxY = grid.getMaxCoords()[1]
+
+  print('points in grid:', len(grid.getAllCoords()))
+  print('maxY', maxY)
+
+  def boundaryCheck(coords: Coords) -> Optional[Coords]:
+    # Stop sand at maxY + 1.
+    return coords if coords[1] == maxY + 1 else None
+
+  cur = START
+  i = 1
+  while (next := addSand(grid, boundaryCheck) != cur):
+    next = cur
+    i += 1
+
+  print(i)
+
+part2()
