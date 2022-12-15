@@ -48,7 +48,7 @@ def getNextSandCoords(
   # The sand was unable to move. Return its current position.
   return coords
 
-def addSand(
+def dropSand(
   grid: SparseGrid,
   boundaryCheck: Callable[[Coords], Optional[Coords]],
 ) -> Coords:
@@ -78,7 +78,7 @@ def part1():
     return INF if coords[1] > grid.getMaxCoords()[1] else None
 
   i = 0
-  while addSand(grid, boundaryCheck) != INF:
+  while dropSand(grid, boundaryCheck) != INF:
     i += 1
 
   print('FINISHED GRID')
@@ -102,10 +102,8 @@ def part2():
     # Stop sand at maxY + 1.
     return coords if coords[1] == maxY + 1 else None
 
-  cur = START
   i = 1
-  while (next := addSand(grid, boundaryCheck) != cur):
-    next = cur
+  while dropSand(grid, boundaryCheck) != START:
     i += 1
 
   print(i)
