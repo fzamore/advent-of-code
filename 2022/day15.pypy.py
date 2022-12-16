@@ -5,7 +5,10 @@ ROW = 2000000
 MAX = 4000000
 #MAX = 20
 
-def parseInput(input):
+Coords = tuple
+Segment = tuple
+
+def parseInput(input: list) -> list:
   result = []
   for line in input:
     sx, sy = map(int, [s.split('=')[1] for s in line.split(':')[0].split(', ')])
@@ -15,12 +18,12 @@ def parseInput(input):
   return result
 
 # Manhattan distance
-def manH(p1, p2):
+def manH(p1: Coords, p2: Coords) -> int:
     return abs(p2[0] - p1[0]) + abs(p2[1] - p1[1])
 
 # Adds the given segment to the list of segments, and does any merging or
 # updating existing segments as needed.
-def addSegmentToLine(segments, segment):
+def addSegmentToLine(segments: list, segment: Segment) -> None:
   x1, x2 = segment
   x1 = max(x1, 0)
   x2 = min(x2, MAX - 1)
