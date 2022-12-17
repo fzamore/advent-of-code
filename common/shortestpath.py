@@ -1,12 +1,12 @@
 from collections import defaultdict
 from heapq import heappush, heappop
-from typing import Any, Callable, DefaultDict, Hashable, Iterator, Tuple
+from typing import Any, Callable, DefaultDict, Dict, Hashable, Iterator, List, Sized, Tuple
 
 # Implementation of Dijkstra's shortest-path algorithm.
 # Params:
 #  startNode (hashable): start node. distance to this node will always be zero
 #  getAdjacentNodes (node => list of (node, distance) tuples): nodes adjacent
-#       to given node
+#       to given node. distances cannot be negative
 #  isDestNode (node => bool): whether this node is a destination, and the
 #       algorithm can terminate
 # Return value:
@@ -46,6 +46,7 @@ def dijkstra(
             return (node, nodeDist)
 
         for adjNode, adjNodeDist in getAdjacentNodes(node):
+            assert adjNodeDist >= 0, 'negative weights not allowed: %d' % adjNodeDist
             if adjNode in visited:
                 # No need to traverse to nodes we've already seen.
                 continue
@@ -63,3 +64,36 @@ def dijkstra(
 
     # There was no path from start to finish.
     return (None, float('inf'))
+
+# Computes the shortest distance between each pair of vertices. Edge weights
+# can be negative, but there can be no negative cycles.
+# Params:
+#   vertices: list of vertices
+#   edgeWeights: mapping of edges to weighs. each edge is a (v1, v2) tuple
+# Return value:
+#    mapping of (v1, v2) tuples to the shortest distance from v1 to v2
+def floydWarshall(
+    vertices: List[Hashable],
+    edgeWeights: Dict[Tuple[Hashable, Hashable], int],
+) -> Dict[Tuple[Hashable, Hashable], float]:
+
+    dist: Dict[Tuple[Hashable, Hashable], float] = \
+        defaultdict(lambda: float('inf'))
+
+    c = len(vertices)
+    for i in range(c):
+        v = vertices[i]
+        dist[(v, v)] = 0
+
+    for v1, v2 in edgeWeights:
+        dist[(v1, v2)] = edgeWeights[(v1, v2)]
+
+    for k in range(c):
+        K = vertices[k]
+        for i in range(c):
+            I = vertices[i]
+            for j in range(c):
+                J = vertices[j]
+                dist[(I, J)] = min(dist[(I, K)] + dist[(K, J)], dist[(I, J)])
+
+    return dist.copy()
