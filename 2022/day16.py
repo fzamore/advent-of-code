@@ -1,3 +1,4 @@
+from functools import cache
 from common.shortestpath import floydWarshall
 
 input = open('day16.txt').read().splitlines()
@@ -22,52 +23,6 @@ def parseInput(
 
   return (values, edgeWeights)
 
-def moveToValve(
-  curValve: str,
-  closedValves: dict[str, int],
-  dist: dict[tuple[str, str], int],
-  minutesRemaining: int,
-  totalScore: int,
-  incrScore: int,
-) -> int:
-  assert totalScore >= 0, 'totalScore must be positive: %d' % totalScore
-  assert incrScore >= 0, 'incrScore must be positive: %d' % incrScore
-
-  # Returns how many minutes it would take to navigate to a valve and open it.
-  def getMinutesToValve(valve: str) -> int:
-    return dist[(curValve, valve)] + 1
-
-  # Returns whether any valves are reachable.
-  def canReachAnyValve() -> bool:
-    for valve in closedValves:
-      if getMinutesToValve(valve) <= minutesRemaining:
-        return True
-    return False
-
-  if not canReachAnyValve():
-    # We can't reach any more valves. Stop.
-    return totalScore + minutesRemaining * incrScore
-
-  best = -1
-  for valve in closedValves:
-    # Navigate to this valve.
-    closedValvesCopy = closedValves.copy()
-    # Open the valve by removing it from the closed valves set.
-    del closedValvesCopy[valve]
-    minutesToValve = getMinutesToValve(valve)
-    score = moveToValve(
-      valve,
-      closedValvesCopy,
-      dist,
-      minutesRemaining - minutesToValve,
-      totalScore + minutesToValve * incrScore,
-      incrScore + closedValves[valve],
-    )
-    if score > best:
-      best = score
-
-  return best
-
 def part1():
   values, edgeWeights = parseInput(input)
   print('total node count:', len(values))
@@ -76,15 +31,109 @@ def part1():
   distances = floydWarshall(list(values.keys()), edgeWeights)
 
   # Filter to only valves with non-zero flow value.
-  closedValves = dict(
-    [(valve, value) for valve, value in values.items() if value > 0],
-  )
+  closedValves = tuple([valve for valve, value in values.items() if value > 0])
 
   print(closedValves)
   print('non-zero valve count:', len(closedValves))
 
+  @cache
+  def getMaxScore(
+    valve: str,
+    closedValves: tuple[str], # tuples can be memoized
+    minutesRemaining: int,
+  ) -> int:
+    score = 0
+    for closedValve in closedValves:
+      minutesToValve = distances[valve, closedValve] + 1
+      if minutesRemaining < minutesToValve:
+        # Not enough time to reach this valve.
+        continue
+      # Remove this valve from the new collection of closed valves.
+      closedValvesCopy = tuple([v for v in closedValves if v != closedValve])
+      # Immediately add the total pressure for opening this valve, and
+      # then add the score by moving to that valve. Update our total if
+      # it's higher.
+      score = max(
+        score,
+        (minutesRemaining - minutesToValve) * values[closedValve] + \
+          getMaxScore(closedValve, closedValvesCopy, minutesRemaining - minutesToValve),
+      )
+    return score
+
   assert values['AA'] == 0, 'bad start node value: %d' % values['AA']
-  score = moveToValve('AA', closedValves, distances, 30, 0, 0)
+  score = getMaxScore('AA', closedValves, 30)
   print(score)
 
-part1()
+def part2():
+  values, edgeWeights = parseInput(input)
+  print('total node count:', len(values))
+
+  # Compute distances between all pairs of points.
+  distances = floydWarshall(list(values.keys()), edgeWeights)
+
+  # Filter to only valves with non-zero flow value.
+  nonZeroValves = tuple([valve for valve, value in values.items() if value > 0])
+
+  print(nonZeroValves)
+  print('non-zero valve count:', len(nonZeroValves))
+
+  @cache
+  def getMaxScore(
+    valve: str,
+    closedValves: tuple[str, ...], # tuples can be memoized
+    minutesRemaining: int,
+  ) -> int:
+    score = 0
+    for closedValve in closedValves:
+      minutesToValve = distances[valve, closedValve] + 1
+      if minutesRemaining < minutesToValve:
+        # Not enough time to reach this valve.
+        continue
+      # Remove this valve from the new collection of closed valves.
+      closedValvesCopy = tuple([v for v in closedValves if v != closedValve])
+      # Immediately add the total pressure for opening this valve, and
+      # then add the score by moving to that valve. Update our total if
+      # it's higher.
+      score = max(
+        score,
+        (minutesRemaining - minutesToValve) * values[closedValve] + \
+          getMaxScore(closedValve, closedValvesCopy, minutesRemaining - minutesToValve),
+      )
+    return score
+
+  # With more elephants!
+  def getMaxScoreWithElephant(
+    valve: str,
+    closedValves: tuple[str, ...], # tuples can be memoized
+    minutesRemaining: int,
+  ) -> int:
+    # Set the elephant loose on these valves by himself and use that as a
+    # base score. I still don't understand how this doesn't double-count,
+    # given that the same set of closed valves is under consideration
+    # below.
+    score = getMaxScore('AA', closedValves, 26)
+    for closedValve in closedValves:
+      minutesToValve = distances[valve, closedValve] + 1
+      if minutesRemaining < minutesToValve:
+        # Not enough time to reach this valve.
+        continue
+      # Remove this valve from the new collection of closed valves.
+      newClosedValves = tuple([v for v in closedValves if v != closedValve])
+      # Immediately add the total pressure for opening this valve, and
+      # then add the score by moving to that valve. Update our total if
+      # it's higher.
+      score = max(
+        score,
+        (minutesRemaining - minutesToValve) * values[closedValve] + \
+          getMaxScoreWithElephant(
+            closedValve,
+            newClosedValves,
+            minutesRemaining - minutesToValve,
+          ),
+      )
+    return score
+
+  assert values['AA'] == 0, 'bad start node value: %d' % values['AA']
+  score = getMaxScoreWithElephant('AA', nonZeroValves, 26)
+  print(score)
+part2()
