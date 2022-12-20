@@ -1,4 +1,4 @@
-from collections import defaultdict, namedtuple
+from collections import namedtuple
 from common.sparsegrid import SparseGrid
 
 input = open('day17.txt').read().splitlines()[0]
@@ -229,7 +229,9 @@ def part2():
   caveTopChangePerPattern = caveTops[i] - caveTops[firstRockI - 1]
   print('caveTopChangePerPattern:', caveTopChangePerPattern)
 
-  totalRocks = 1000000000000
+  # Assume the pattern starts at firstRockI. Thus, we need to see how many
+  # times the pattern repeats starting at that rock.
+  totalRocks = 1000000000000 - firstRockI
 
   # The number of complete patterns we need.
   numCompletePatterns = totalRocks // rocksPerPattern
@@ -241,19 +243,19 @@ def part2():
 
   print('numPatterns:', numCompletePatterns)
   print('leftOverRocks:', leftOverRocks)
-  print('caveTopAtTopOfPattern:', caveTopAtEndOfLastPattern)
+  print('caveTopAtEndOfLastPattern:', caveTopAtEndOfLastPattern)
 
   assert rocksPerPattern * numCompletePatterns + leftOverRocks == totalRocks
 
+  # The answer is the sum of the following:
+  # - the caveTop at the first rock of the pattern.
+  # - the caveTop at the end of the last complete pattern
+  #   (the pattern starts at firstRockI)
+  # - the change in caveTop over the first "leftOverRocks" of the pattern
   print(
-    caveTops[leftOverRocks],
+    caveTops[firstRockI] + \
+    caveTopAtEndOfLastPattern + \
     caveTops[firstRockI + leftOverRocks] - caveTops[firstRockI],
   )
-
-  # I don't understand why this is the correct calculation.
-  # I think it should be:
-  #   caveTopAtEndOfLastPattern +
-  #     caveTops[firstRockI + leftOverRocks] - caveTops[firstRockI]
-  print(caveTopAtEndOfLastPattern + caveTops[leftOverRocks])
 
 part2()
