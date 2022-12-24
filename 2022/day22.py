@@ -1,9 +1,40 @@
+from typing import Callable
 from common.sparsegrid import SparseGrid
 
 input = open('day22.txt').read()
 
 Heading = tuple[int, int]
 Position = tuple[int, int]
+
+def createGrid() -> SparseGrid:
+  gridStr = input.split("\n\n")[0]
+
+  grid = SparseGrid(2)
+  y = 0
+  for line in gridStr.splitlines():
+    for x in range(len(line)):
+      c = line[x]
+      if c != ' ':
+        grid.setValue((x, y), c)
+    y += 1
+  return grid
+
+def getPathInstructions() -> list[int | str]:
+  pathStr = input.split("\n\n")[1]
+  pathStr = pathStr.splitlines()[0]
+  result: list[int | str] = []
+  i = 0
+  startNum = 0
+  while i < len(pathStr):
+    c = pathStr[i]
+    if c in ['L', 'R']:
+      numSpaces = int(pathStr[startNum:i])
+      startNum = i + 1
+      result.append(numSpaces)
+      result.append(c)
+    i += 1
+  result.append(int(pathStr[startNum:i]))
+  return result
 
 def rotate(heading: Heading, dir: str) -> Heading:
   assert dir in ['L', 'R']
@@ -19,14 +50,13 @@ def rotate(heading: Heading, dir: str) -> Heading:
     case _:
       assert False, 'bad heading'
 
-def moveForward(
+def getNextPositionAndHeading(
   grid: SparseGrid,
   pos: Position,
   heading: Heading,
   rowBounds: tuple[int, int],
   colBounds: tuple[int, int],
-  numSpaces: int,
-) -> Position:
+) -> tuple[Position, Heading]:
   x, y = pos
   assert grid.getValue((x, y)) == '.', 'pos in bad spot: (%d, %d)' %(x, y)
   dx, dy = heading
@@ -35,30 +65,36 @@ def moveForward(
   mx, my = x - cmin, y - rmin
   colMod = cmax - cmin + 1
   rowMod = rmax - rmin + 1
-  for _ in range(numSpaces):
-    tx, ty = ((mx + dx) % colMod, (my + dy) % rowMod)
-    nx, ny = tx + cmin, ty + rmin
-    if grid.getValue((nx, ny)) == '#':
-      return (mx + cmin, my + rmin)
-    mx, my = tx, ty
 
-  result = mx + cmin, my + rmin
-  assert grid.getValue(result) == '.', \
+  tx, ty = ((mx + dx) % colMod, (my + dy) % rowMod)
+  mx, my = tx, ty
+
+  result = (mx + cmin, my + rmin)
+  assert grid.hasValue(result), \
     'result in bad spot: (%d, %d)' % (result[0], result[1])
-  return result
+  return (result, heading)
+
+def moveForward(
+  grid: SparseGrid,
+  pos: Position,
+  heading: Heading,
+  getNextFn: Callable[[SparseGrid, Position, Heading], tuple[Position, Heading]],
+  numSpaces: int,
+) -> Position:
+  x, y = pos
+  assert grid.getValue((x, y)) == '.', 'pos in bad spot: (%d, %d)' %(x, y)
+  for _ in range(numSpaces):
+    npos, _ = getNextFn(grid, pos, heading)
+    if grid.getValue(npos) == '#':
+      break
+    pos = npos
+
+  x, y = pos
+  assert grid.getValue(pos) == '.', 'result in bad spot: (%d, %d)' % (x, y)
+  return pos
 
 def part1():
-  gridStr, pathStr = input.split("\n\n")
-  pathStr = pathStr.splitlines()[0]
-
-  grid = SparseGrid(2)
-  y = 0
-  for line in gridStr.splitlines():
-    for x in range(len(line)):
-      c = line[x]
-      if c != ' ':
-        grid.setValue((x, y), c)
-    y += 1
+  grid = createGrid()
 
   maxX, maxY = grid.getMaxCoords()
 
@@ -91,32 +127,25 @@ def part1():
   heading = (1, 0)
   print('starting pos:', pos)
 
-  i = 0
-  startNum = 0
-  while i < len(pathStr):
-    c = pathStr[i]
-    if c in ['L', 'R']:
-      numSpaces = int(pathStr[startNum:i])
-      pos = moveForward(
-        grid,
-        pos,
-        heading,
-        rowBounds[pos[1]],
-        colBounds[pos[0]],
-        numSpaces,
-      )
-      heading = rotate(heading, c)
-      startNum = i + 1
-    i += 1
-  numSpaces = int(pathStr[startNum:i])
-  pos = moveForward(
-    grid,
-    pos,
-    heading,
-    rowBounds[pos[1]],
-    colBounds[pos[0]],
-    numSpaces,
-  )
+  for instr in getPathInstructions():
+    if instr in ['L', 'R']:
+      heading = rotate(heading, instr)
+    else:
+      def getNextFn(
+        grid: SparseGrid,
+        pos: Position,
+        heading: heading,
+      ) -> tuple[Position, Heading]:
+        return getNextPositionAndHeading(
+          grid,
+          pos,
+          heading,
+          rowBounds[pos[1]],
+          colBounds[pos[0]],
+        )
+      numSpaces = int(instr)
+      pos = moveForward(grid, pos, heading, getNextFn, numSpaces)
+
   print('final pos:', pos)
   print('final heading', heading)
   headingScore = {
