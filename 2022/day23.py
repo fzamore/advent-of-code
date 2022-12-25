@@ -83,7 +83,6 @@ def doRound(
 
 def part1():
   grid = initGrid()
-
   rules = initRules()
 
   rounds = 10
@@ -104,4 +103,21 @@ def part1():
   print(rectSize, len(allCoords))
   print(rectSize - len(allCoords))
 
-part1()
+def part2():
+  grid = initGrid()
+  rules = initRules()
+
+  elves = set(grid.getAllCoords())
+
+  i = 1
+  while True:
+    rules = doRound(grid, rules)
+    nelves = set(grid.getAllCoords())
+    if elves == nelves:
+      break
+    elves = nelves
+    i += 1
+
+  print(i)
+
+part2()
