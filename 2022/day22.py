@@ -323,9 +323,7 @@ def part2():
   heading = (1, 0)
   print('starting pos:', pos)
 
-  instructions = getPathInstructions()
-  for i in range(len(instructions)):
-    instr = instructions[i]
+  for instr in getPathInstructions():
     if instr in ['L', 'R']:
       heading = rotate(heading, instr)
       print('after rotation', instr, heading)
@@ -345,10 +343,7 @@ def part2():
         )
       numSpaces = int(instr)
       pos, nHeading = moveForward(grid, pos, heading, getNextFn, numSpaces)
-      if i != len(instructions) - 1:
-        # Sigh. We don't update the heading if this is the last
-        # instruction, since we want to keep the same orientation.
-        heading = nHeading
+      heading = nHeading
       print('after moving', numSpaces, pos, heading)
 
   print('final pos:', pos)
