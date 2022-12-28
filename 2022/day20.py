@@ -79,7 +79,6 @@ def part1():
       node.next = next.next
       node.next.prev = node
       node.prev.next = node
-      verifyNodes(zero, count)
 
     if v < 0:
       for _ in range(abs(v) - 1):
@@ -89,8 +88,6 @@ def part1():
       node.next = prev
       node.next.prev = node
       node.prev.next = node
-      verifyNodes(zero, count)
-
 
   print('done')
   verifyNodes(zero, count)
