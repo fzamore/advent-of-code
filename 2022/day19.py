@@ -1,4 +1,5 @@
 from enum import Enum
+from functools import cache
 from math import ceil
 
 input = open('day19.txt').read().splitlines()
@@ -116,23 +117,46 @@ def getTimeToProduceRobot(
   assert productionTime > 0, 'bad result in time calculation: %d' % productionTime
   return productionTime
 
-# Returns whether we have the maximum amount of a given resource that is
-# required for any bot (and thus do not need to collect more).
-def hasMaxResources(
+# Returns whether already have enough robots of a given type (i.e., at
+# least as many as the maximum of the corresponding resource needed to
+# produce any bot) and thus do not need to collect more.
+def hasEnoughRobotsOfType(
   robot: Robot,
   blueprint: Blueprint,
-  resources: Resources,
+  robots: Robots,
 ) -> bool:
   if robot == Robot.GEODE:
     return False
-  i = robot.value
-  return resources[i] >= max([r[i] for r in blueprint])
+  return robots[robot.value] >= max([r[robot.value] for r in blueprint])
+
+# Returns whether producing this robot will provide no benefit and we
+# should thus skip it.
+def shouldSkipProduction(
+  robot: Robot,
+  blueprint: Blueprint,
+  robots: Robots,
+  minutesRemaining: int,
+) -> bool:
+  if hasEnoughRobotsOfType(robot, blueprint, robots):
+    return True
+
+  match robot:
+    case Robot.GEODE:
+      return minutesRemaining < 1
+    case Robot.OBSIDIAN:
+      return minutesRemaining < 3
+    case Robot.CLAY:
+      return minutesRemaining < 5
+    case Robot.ORE:
+      return minutesRemaining < 3
+    case _: assert False
 
 # Recursively compute the maximum number of geodes we can crack. At each
 # level of recursion, we try to produce each robot type (if we have enough
 # time), and advance the time by however long it takes to produce that
 # robot. This eliminates the need to implement "waiting" to produce enough
 # resources to produce a robot.
+@cache
 def computeMaxGeodes(
   blueprint: Blueprint,
   robots: Robots,
@@ -161,9 +185,7 @@ def computeMaxGeodes(
       # We do not have enough time to produce this robot.
       continue
 
-    if hasMaxResources(robot, blueprint, resources):
-      # Do not bother producing this robot if we're already have the
-      # maximum resource that robot produces.
+    if shouldSkipProduction(robot, blueprint, robots, newMinutesRemaining):
       continue
 
     # Consume the resources necessary to produce this robot.
