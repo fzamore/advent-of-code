@@ -221,4 +221,33 @@ def part1():
 
   print(result)
 
-part1()
+def part2():
+  blueprints = parseInput()
+  if len(blueprints) > 3:
+    blueprints = {
+      1: blueprints[1],
+      2: blueprints[2],
+      3: blueprints[3],
+    }
+  print('blueprints:', blueprints)
+  print('num blueprints:', len(blueprints))
+  print()
+
+  minutesRemaining = 32
+  result = 1
+  for blueprintID in blueprints:
+    print('blueprint:',  blueprintID)
+    blueprint = blueprints[blueprintID]
+    geodes = computeMaxGeodes(
+      blueprint,
+      (1, 0, 0),
+      (0, 0, 0),
+      minutesRemaining,
+    )
+    print('blueprint finished:', blueprintID, geodes)
+    result *= geodes
+    print()
+
+  print(result)
+
+part2()
