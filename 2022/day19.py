@@ -15,7 +15,7 @@ class Resource(Enum):
   OBSIDIAN = 2
 
 # If it takes this many minutes to produce a robot, we cannot produce it.
-CANNOT_PRODUCE = 25
+CANNOT_PRODUCE = 33
 
 Resources = tuple[int, int, int] # quantities of ore, clay, and obsidian
 Robots = tuple[int, int, int] # quantities of ore, clay, and obsidian robots
@@ -139,6 +139,7 @@ def computeMaxGeodes(
   resources: Resources,
   minutesRemaining: int,
 ) -> int:
+  assert CANNOT_PRODUCE > minutesRemaining
 
   mostGeodesCracked = 0
   for robot in Robot:
