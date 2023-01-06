@@ -3,8 +3,7 @@ input = open('day25.txt').read().splitlines()
 def snafuToDecimal(snafu: str) -> int:
   place = 1
   result = 0
-  for i in range(len(snafu) - 1, -1, -1):
-    c = snafu[i]
+  for c in reversed(snafu):
     if c.isdigit():
       assert int(c) in [0, 1, 2], 'bad snafu digit: %s' % c
       v = int(c)
@@ -18,20 +17,8 @@ def snafuToDecimal(snafu: str) -> int:
   return result
 
 def decimalToSnafu(decimal: int) -> str:
-  table = {
-    0: '0',
-    1: '1',
-    2: '2',
-    3: '1=',
-    4: '1-',
-    5: '10',
-    6: '11',
-    7: '12',
-    8: '2=',
-    9: '2-',
-  }
   result = ''
-  while decimal not in table:
+  while decimal > 0:
     decdigit = decimal % 5
     if decdigit < 3:
       snafudigit = str(decdigit)
@@ -46,7 +33,7 @@ def decimalToSnafu(decimal: int) -> str:
     decimal += carry
     decimal //= 5
 
-  return table[decimal] + result
+  return result
 
 def part1():
   decimalSum = 0
