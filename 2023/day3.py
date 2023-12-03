@@ -1,4 +1,5 @@
 from collections import namedtuple
+import math
 from typing import Optional
 from common.arraygrid import ArrayGrid
 
@@ -51,7 +52,8 @@ def isAdjacentToSymbol(grid: ArrayGrid, x: int, y: int) -> bool:
 
 def getGearRatio(grid: ArrayGrid, x: int, y: int) -> int:
   assert grid.getValue(x, y) == '*', 'bad coords to getGearRatio'
-  e1, e2 = None, None
+  # Use a set to keep track of adjacent entries so we get deduping.
+  adjacentEntries = set()
   for i in range(-1, 2):
     for j in range(-1, 2):
       if i == 0 and j == 0:
@@ -62,23 +64,11 @@ def getGearRatio(grid: ArrayGrid, x: int, y: int) -> int:
         continue
       v = grid.getValue(nx, ny)
       if isinstance(v, Entry):
-        if v == e1 or v == e2:
-          # We've already seen this Entry. Keep going.
-          continue
-        if e1 is not None and e2 is not None:
-          # This gear is adjacent to more than two Entries. It should not
-          # be counted.
-          return 0
-        if e1 is None:
-          # The first Entry we've encountered.
-          e1 = v
-        else:
-          # The second Entry we've encountered.
-          assert e2 is None, 'bad logic'
-          e2 = v
-  if e1 is not None and e2 is not None:
-    return e1.value * e2.value
-  return 0
+        adjacentEntries.add(v)
+  if len(adjacentEntries) == 2:
+    return math.prod([e.value for e in adjacentEntries])
+  else:
+    return 0
 
 def part1():
   grid = initGrid()
