@@ -61,8 +61,6 @@ def getGearRatio(grid: ArrayGrid, x: int, y: int) -> int:
       if not grid.areCoordsWithinBounds(nx, ny):
         continue
       v = grid.getValue(nx, ny)
-      if y == 2:
-        print(nx, ny, v)
       if isinstance(v, Entry):
         if e1 is None:
           e1 = v
