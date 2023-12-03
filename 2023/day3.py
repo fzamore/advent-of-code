@@ -64,7 +64,7 @@ def getGearRatio(grid: ArrayGrid, x: int, y: int) -> int:
       if isinstance(v, Entry):
         if e1 is None:
           e1 = v
-        elif v is e1:
+        elif v == e1:
           continue
         else:
           return e1.value * v.value
