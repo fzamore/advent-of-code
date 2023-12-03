@@ -13,6 +13,9 @@ class ArrayGrid:
     def getHeight(self) -> int:
         return self._height
 
+    def hasValue(self, x: int, y: int) -> bool:
+        return self.getValue(x, y) is not None
+
     def getValue(self, x: int, y: int, default: Any = None) -> Any:
         i = self._gridIndex(x, y)
         if i < 0 or i >= self._gridLen:
