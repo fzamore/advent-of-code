@@ -1,4 +1,4 @@
-from collections import namedtuple
+from collections import defaultdict, namedtuple
 
 input = open('day4.txt').read().splitlines()
 
@@ -27,33 +27,23 @@ def part1():
   print(sum)
 
 def part2():
-  cards = [parseLine(line) for line in input]
-  print(cards)
-  print(len(cards))
-
   cardScores = {}
-  cardsInHand = {}
-  for card in cards:
+  cardsInHand = defaultdict(int)
+
+  # Parse each card sequentially.
+  for line in input:
+    card = parseLine(line)
+    cardId = card.id
+
+    # Compute the score for this card.
     s = set(card.winningNumbers)
     matches = [n for n in card.myNumbers if n in s]
     score = len(matches)
-    cardScores[card.id] = score
+    cardScores[cardId] = score
 
-    cardsInHand[card.id] = 1
+    # Add one for the original of this card.
+    cardsInHand[card.id] += 1
 
-  print(cardsInHand)
-  print(cardScores)
-
-  maxId = max(cardScores.keys())
-  print('maxId:', maxId)
-  print()
-
-  # Process cards in order, since card X can only affect cards > X.
-  for cardId in range(1, maxId + 1):
-    score = cardScores[cardId]
-    if score == 0:
-      continue
-    assert cardId + score <= maxId, 'bad card score'
     for i in range(cardId + 1, cardId + score + 1):
       # For each matching card, add as many copies as we have of the
       # current card.
