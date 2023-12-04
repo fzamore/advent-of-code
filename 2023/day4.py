@@ -27,7 +27,6 @@ def part1():
   print(sum)
 
 def part2():
-  cardScores = {}
   cardsInHand = defaultdict(int)
 
   # Parse each card sequentially.
@@ -39,15 +38,14 @@ def part2():
     s = set(card.winningNumbers)
     matches = [n for n in card.myNumbers if n in s]
     score = len(matches)
-    cardScores[cardId] = score
 
     # Add one for the original of this card.
     cardsInHand[card.id] += 1
 
-    for i in range(cardId + 1, cardId + score + 1):
+    for i in range(score):
       # For each matching card, add as many copies as we have of the
       # current card.
-      cardsInHand[i] += cardsInHand[cardId]
+      cardsInHand[cardId + 1 + i] += cardsInHand[cardId]
 
   print(cardsInHand)
   print(sum(cardsInHand.values()))
