@@ -64,7 +64,7 @@ def subtractRanges(r1: range, r2: range) \
 
 # Subtracts multiple ranges from a single range. Only non-empty ranges are
 # included in the result. Maximum number of results is 2^(number of
-# minuends), due to each individuall subtraction generating up to two
+# minuends), due to each individual subtraction generating up to two
 # results (i.e., branching factor of two).
 def subtractMultipleRanges(subtrahend: range, minuends: list[range]) \
   -> list[range]:
@@ -81,10 +81,11 @@ def subtractMultipleRanges(subtrahend: range, minuends: list[range]) \
 
 # Combines two maps into a single map.
 def combineMaps(m1: Map, m2: Map) -> Map:
-  allRanges: list[MapRange] = []
+  intersectionRanges: list[MapRange] = []
+  # Compute all ranges that can be hit from a range in m1 then a range in m2.
   for r1 in m1.ranges:
-    rxRanges: list[range] = []
     for r2 in m2.ranges:
+      # Subtract deltas to go backwards from m2 to m1.
       start = r2.start - r1.delta
       end = r2.end - r1.delta
 
@@ -94,43 +95,47 @@ def combineMaps(m1: Map, m2: Map) -> Map:
         range(r1.start, r1.end),
       )
       if intersection is not None:
-        # If there is an intersection, we combine the two deltas.
+        # If there is an intersection, we add the two deltas, because they
+        # will get applied in sequence.
         rx = range(intersection.start, intersection.stop)
-        rxRanges.append(rx)
-        allRanges.append(MapRange(rx.start, rx.stop, r1.delta + r2.delta))
+        intersectionRanges.append(
+          MapRange(rx.start, rx.stop, r1.delta + r2.delta)
+        )
 
-    # Subtract each of the intersections from r1.
-    for r in rxRanges:
-      rx1, rx2 = subtractRanges(range(r1.start, r1.end), r)
-      if rx1 is not None:
-        allRanges.append(MapRange(rx1.start, rx1.stop, r1.delta))
-      if rx2 is not None:
-        allRanges.append(MapRange(rx2.start, rx2.stop, r1.delta))
-    if len(rxRanges) == 0:
-      # if there were no intersections, add the r1 range as is
-      allRanges.append(MapRange(r1.start, r1.end, r1.delta))
+  # Subtract the intersection ranges from all ranges in m1 and m2, and add
+  # the resuts of the subtraction. This preserves values that will hit
+  # exacty one range in m1 or m2.
+  existingRanges = []
+  for r1 in m1.ranges:
+    results = subtractMultipleRanges(
+      range(r1.start, r1.end),
+      [range(r.start, r.end) for r in intersectionRanges],
+    )
+    for result in results:
+      existingRanges.append(MapRange(
+        result.start,
+        result.stop,
+        r1.delta,
+      ))
 
-  # Subtract all ranges so far from all ranges in m2, which preserves the
-  # ranges in m2 that are impossible to hit from a range in m1.
-  extraM2Ranges = []
   for r2 in m2.ranges:
     results = subtractMultipleRanges(
       range(r2.start, r2.end),
-      [range(r.start, r.end) for r in allRanges],
+      [range(r.start, r.end) for r in intersectionRanges],
     )
     for result in results:
-      extraM2Ranges.append(MapRange(
+      existingRanges.append(MapRange(
         result.start,
         result.stop,
         r2.delta,
       ))
 
-  allRanges.extend(extraM2Ranges)
+  intersectionRanges.extend(existingRanges)
   name = '%s-to-%s' % (
     m1.name.split('-to-')[0],
     m2.name.split('-to-')[1],
   )
-  return Map(name, allRanges)
+  return Map(name, intersectionRanges)
 
 def part1():
   seeds = list(map(int, input[0].split(': ')[1].split()))
@@ -163,11 +168,13 @@ def part2():
   maps = [parseMap(x) for x in input[1:]]
   assert len(maps) == 7, 'bad maps input'
 
+  # Combine all of the maps.
   combinedMap = maps[0]
   for i in range(1, len(maps)):
     combinedMap = combineMaps(combinedMap, maps[i])
   print('ranges in combined map:', len(combinedMap.ranges))
 
+  # Compute a list of seed candidates for lowest location.
   candidates = set()
   for start, length in seedRanges:
     s1, s2 = start, start + length - 1
