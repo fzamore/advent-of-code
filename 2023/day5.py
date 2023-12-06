@@ -4,6 +4,8 @@ from typing import Optional
 
 input = open('day5.txt').read().split("\n\n")
 
+# All ranges (both MapRange and range) are inclusive.
+
 @dataclass(frozen=True)
 class MapRange:
   start: int
