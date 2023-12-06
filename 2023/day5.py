@@ -5,15 +5,15 @@ from typing import Optional
 input = open('day5.txt').read().split("\n\n")
 
 @dataclass(frozen=True)
-class Range:
+class MapRange:
   start: int
-  end: int
-  delta: int
+  end: int # inclusive
+  delta: int # the amount to add to the seed to get the destination
 
 @dataclass(frozen=True)
 class Map:
   name: str
-  ranges: list[Range]
+  ranges: list[MapRange]
 
 def parseMap(mapStr: str) -> Map:
   lines = mapStr.splitlines()
@@ -21,20 +21,24 @@ def parseMap(mapStr: str) -> Map:
   ranges = []
   for line in lines[1:]:
     dst, src, len = list(map(int, line.split()))
-    ranges.append(Range(src, src + len - 1, dst - src))
+    ranges.append(MapRange(src, src + len - 1, dst - src))
   return Map(name, ranges)
 
+# Traces a single seed value through a single map.
 def traceValue(map: Map, value: int) -> int:
   for range in map.ranges:
     if range.start <= value <= range.end:
       return value + range.delta
   return value
 
+# Performs an intersection of the two ranges. None represents an empty
+# intersection.
 def intersectRanges(r1: range, r2: range) -> Optional[range]:
   if r2.start > r1.stop or r1.start > r2.stop:
     return None
   return range(max(r1.start, r2.start), min(r1.stop, r2.stop))
 
+# Subtracts r2 from r1. There are two results, any of which may be empty.
 def subtractRanges(r1: range, r2: range) \
   -> tuple[Optional[range], Optional[range]]:
   if r2.stop < r1.start:
@@ -56,6 +60,10 @@ def subtractRanges(r1: range, r2: range) \
   else:
     assert False, 'bad range subtraction: %s, %s' % (r1, r2)
 
+# Subtracts multiple ranges from a single range. Only non-empty ranges are
+# included in the result. Maximum number of results is 2^(number of
+# minuends), due to each individuall subtraction generating up to two
+# results (i.e., branching factor of two).
 def subtractMultipleRanges(subtrahend: range, minuends: list[range]) \
   -> list[range]:
   subtrahends = defaultdict(list)
@@ -69,8 +77,9 @@ def subtractMultipleRanges(subtrahend: range, minuends: list[range]) \
         subtrahends[i + 1]. append(r2)
   return subtrahends[len(minuends)]
 
+# Combines two maps into a single map.
 def combineMaps(m1: Map, m2: Map) -> Map:
-  allRanges: list[Range] = []
+  allRanges: list[MapRange] = []
   for r1 in m1.ranges:
     rxRanges: list[range] = []
     for r2 in m2.ranges:
@@ -86,19 +95,21 @@ def combineMaps(m1: Map, m2: Map) -> Map:
         # If there is an intersection, we combine the two deltas.
         rx = range(intersection.start, intersection.stop)
         rxRanges.append(rx)
-        allRanges.append(Range(rx.start, rx.stop, r1.delta + r2.delta))
-    # subtract each of the intersections from r1
+        allRanges.append(MapRange(rx.start, rx.stop, r1.delta + r2.delta))
+
+    # Subtract each of the intersections from r1.
     for r in rxRanges:
       rx1, rx2 = subtractRanges(range(r1.start, r1.end), r)
       if rx1 is not None:
-        allRanges.append(Range(rx1.start, rx1.stop, r1.delta))
+        allRanges.append(MapRange(rx1.start, rx1.stop, r1.delta))
       if rx2 is not None:
-        allRanges.append(Range(rx2.start, rx2.stop, r1.delta))
+        allRanges.append(MapRange(rx2.start, rx2.stop, r1.delta))
     if len(rxRanges) == 0:
       # if there were no intersections, add the r1 range as is
-      allRanges.append(Range(r1.start, r1.end, r1.delta))
+      allRanges.append(MapRange(r1.start, r1.end, r1.delta))
 
-  # Subtract all ranges so far from all ranges in m2
+  # Subtract all ranges so far from all ranges in m2, which preserves the
+  # ranges in m2 that are impossible to hit from a range in m1.
   extraM2Ranges = []
   for r2 in m2.ranges:
     results = subtractMultipleRanges(
@@ -106,7 +117,7 @@ def combineMaps(m1: Map, m2: Map) -> Map:
       [range(r.start, r.end) for r in allRanges],
     )
     for result in results:
-      extraM2Ranges.append(Range(
+      extraM2Ranges.append(MapRange(
         result.start,
         result.stop,
         r2.delta,
