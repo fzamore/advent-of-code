@@ -116,6 +116,13 @@ def compareCards(c1: str, c2: str) -> int:
 def compareCardBids(cb1: tuple[str, int], cb2: tuple[str, int]) -> int:
   return compareCards(cb1[0], cb2[0])
 
+def computeWinnings(cardBids: list[tuple[str, int]]) -> int:
+  sortedCardBids = sorted(cardBids, key=cmp_to_key(compareCardBids))
+  print(sortedCardBids)
+
+  return \
+    sum([(i + 1) * sortedCardBids[i][1] for i in range(len(sortedCardBids))])
+
 def part1():
   print('num cards:', len(input))
 
@@ -126,12 +133,7 @@ def part1():
     cardBids.append((card, bid))
   print(cardBids)
 
-  sortedCardBids = sorted(cardBids, key=cmp_to_key(compareCardBids))
-  print(sortedCardBids)
-
-  print(
-    sum([(i + 1) * sortedCardBids[i][1] for i in range(len(sortedCardBids))]),
-  )
+  print(computeWinnings(cardBids))
 
 def part2():
   print('num cards:', len(input))
@@ -139,15 +141,11 @@ def part2():
   cardBids = []
   for line in input:
     card, bid = line.split()
+    # Jokers!
     card = card.replace('J', 'R')
     bid = int(bid)
     cardBids.append((card, bid))
 
-  sortedCardBids = sorted(cardBids, key=cmp_to_key(compareCardBids))
-  print(sortedCardBids)
-
-  print(
-    sum([(i + 1) * sortedCardBids[i][1] for i in range(len(sortedCardBids))]),
-  )
+  print(computeWinnings(cardBids))
 
 part2()
