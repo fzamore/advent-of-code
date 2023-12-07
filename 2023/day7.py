@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import Counter
 from enum import IntEnum
 from functools import cmp_to_key
 
@@ -23,10 +23,8 @@ def assertCard(card: str) -> None:
 
 def getCardType(card: str) -> CardType:
   assertCard(card)
-  d: dict[str, int] = defaultdict(int)
-  for c in card:
-    d[c] += 1
-  sortedValues = sorted(d.values(), reverse=True)
+  c = Counter(card)
+  sortedValues = sorted(c.values(), reverse=True)
   match sortedValues[0]:
     case 5:
       return CardType.FIVE_OF_A_KIND
