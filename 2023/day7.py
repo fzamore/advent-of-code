@@ -1,6 +1,5 @@
 from collections import Counter
 from enum import IntEnum
-from functools import cmp_to_key
 
 input = open('day7.txt').read().splitlines()
 
@@ -67,37 +66,16 @@ def getBestCardType(card: str) -> CardType:
     possibleCardTypes.append(getCardType(ncard))
   return max(possibleCardTypes)
 
-def compareCards(c1: str, c2: str) -> int:
-  assertCard(c1)
-  assertCard(c2)
-  t1, t2 = getBestCardType(c1), getBestCardType(c2)
-  if t1 > t2:
-    # c1 is better
-    return 1
-  elif t2 > t1:
-    # c2 is better
-    return -1
-
-  for i in range(5):
-    assert c1[i] in CardOrder, 'bad card value: %s' % c1[i]
-    assert c2[i] in CardOrder, 'bad card value: %s' % c2[i]
-    i1 = CardOrder.index(c1[i])
-    i2 = CardOrder.index(c2[i])
-    if i1 < i2:
-      # c1 is better
-      return 1
-    elif i2 < i1:
-      # c2 is better
-      return -1
-  assert False, 'equal cards: %s, %s' % (c1, c2)
-
-def compareCardBids(cb1: tuple[str, int], cb2: tuple[str, int]) -> int:
-  return compareCards(cb1[0], cb2[0])
+# Function to pass to key= in sorted().
+def cardKey(card: str) -> tuple[int, list[int]]:
+  cardType = getBestCardType(card)
+  # Use a list of CardOrder indices as a tiebreaker when the card type is
+  # the same (since lists get pairwise compared by sorted()).
+  tiebreaker = [len(CardOrder) - CardOrder.index(c) for c in card]
+  return cardType, tiebreaker
 
 def computeWinnings(cardBids: list[tuple[str, int]]) -> int:
-  sortedCardBids = sorted(cardBids, key=cmp_to_key(compareCardBids))
-  print(sortedCardBids)
-
+  sortedCardBids = sorted(cardBids, key=lambda cb: cardKey(cb[0]))
   return \
     sum([(i + 1) * sortedCardBids[i][1] for i in range(len(sortedCardBids))])
 
