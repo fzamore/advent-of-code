@@ -56,14 +56,14 @@ def getBestCardType(card: str) -> CardType:
     return getCardType(card)
 
   # Find the best card type, taking Jokers into account.
-  possibleCardTypes = []
+  possibleCardTypes = set()
   nonJokerValues = set(card) - set('R')
   for v in nonJokerValues:
     # Replace all Jokers with this value. We don't need to replace
     # multiple Jokers with multiple values because replacing all Jokers
     # with a single value will always be better.
     ncard = card.replace('R', v)
-    possibleCardTypes.append(getCardType(ncard))
+    possibleCardTypes.add(getCardType(ncard))
   return max(possibleCardTypes)
 
 # Function to pass to key= in sorted().
