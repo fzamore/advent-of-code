@@ -14,7 +14,9 @@ class CardType(IntEnum):
   FOUR_OF_A_KIND = 6
   FIVE_OF_A_KIND = 7
 
-CardOrder = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2']
+# R is for Joker
+CardOrder = \
+  ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2', 'R']
 
 def assertCard(card: str) -> None:
   assert len(card) == 5, 'bad card: %s' % card
@@ -45,10 +47,52 @@ def getCardType(card: str) -> CardType:
     case _:
       assert False, 'bad card type: %s' % card
 
+# Recursively find all possible cards, taking Jokers into account.
+def getPossibleCards(card: str, i: int) -> list[str]:
+  assertCard(card)
+  assert 0 <= i <= 5, 'bad index: %d' % i
+  if i == 5:
+    return [card]
+
+  if 'R' not in card:
+    return [card]
+
+  char = card[i]
+  if char != 'R':
+    # This isn't a Joker. Move to the next value.
+    return getPossibleCards(card, i + 1)
+
+  results = []
+  for v in CardOrder:
+    if v == 'R':
+      # Don't replace R with R.
+      continue
+    if v not in card:
+      # Optimization: don't bother trying values that don't appear
+      # elsewhere in the card.
+      continue
+    # Replace the Joker with another value.
+    newCard = card[0:i] + v + card[i + 1:5]
+    results.extend(getPossibleCards(newCard, i + 1))
+  return results
+
+def getBestCardType(card: str) -> CardType:
+  assertCard(card)
+  if card == 'RRRRR':
+    # Special-case this to make my life easier.
+    return CardType.FIVE_OF_A_KIND
+
+  if 'R' not in card:
+    # No Jokers. Life if simple.
+    return getCardType(card)
+
+  possibleCards = getPossibleCards(card, 0)
+  return max([getCardType(c) for c in possibleCards])
+
 def compareCards(c1: str, c2: str) -> int:
   assertCard(c1)
   assertCard(c2)
-  t1, t2 = getCardType(c1), getCardType(c2)
+  t1, t2 = getBestCardType(c1), getBestCardType(c2)
   if t1 > t2:
     # c1 is better
     return 1
@@ -57,6 +101,8 @@ def compareCards(c1: str, c2: str) -> int:
     return -1
 
   for i in range(5):
+    assert c1[i] in CardOrder, 'bad card value: %s' % c1[i]
+    assert c2[i] in CardOrder, 'bad card value: %s' % c2[i]
     i1 = CardOrder.index(c1[i])
     i2 = CardOrder.index(c2[i])
     if i1 < i2:
@@ -87,4 +133,21 @@ def part1():
     sum([(i + 1) * sortedCardBids[i][1] for i in range(len(sortedCardBids))]),
   )
 
-part1()
+def part2():
+  print('num cards:', len(input))
+
+  cardBids = []
+  for line in input:
+    card, bid = line.split()
+    card = card.replace('J', 'R')
+    bid = int(bid)
+    cardBids.append((card, bid))
+
+  sortedCardBids = sorted(cardBids, key=cmp_to_key(compareCardBids))
+  print(sortedCardBids)
+
+  print(
+    sum([(i + 1) * sortedCardBids[i][1] for i in range(len(sortedCardBids))]),
+  )
+
+part2()
