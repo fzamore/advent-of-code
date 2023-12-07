@@ -47,34 +47,6 @@ def getCardType(card: str) -> CardType:
     case _:
       assert False, 'bad card type: %s' % card
 
-# Recursively find all possible cards, taking Jokers into account.
-def getPossibleCards(card: str, i: int) -> list[str]:
-  assertCard(card)
-  assert 0 <= i <= 5, 'bad index: %d' % i
-  if i == 5:
-    return [card]
-
-  if 'R' not in card:
-    return [card]
-
-  char = card[i]
-  if char != 'R':
-    # This isn't a Joker. Move to the next value.
-    return getPossibleCards(card, i + 1)
-
-  results = []
-  for v in CardOrder:
-    if v == 'R':
-      # Don't replace R with R.
-      continue
-    if v not in card:
-      # Optimization: don't bother trying values that don't appear
-      # elsewhere in the card.
-      continue
-    # Replace the Joker with another value.
-    newCard = card[0:i] + v + card[i + 1:5]
-    results.extend(getPossibleCards(newCard, i + 1))
-  return results
 
 def getBestCardType(card: str) -> CardType:
   assertCard(card)
@@ -86,8 +58,16 @@ def getBestCardType(card: str) -> CardType:
     # No Jokers. Life if simple.
     return getCardType(card)
 
-  possibleCards = getPossibleCards(card, 0)
-  return max([getCardType(c) for c in possibleCards])
+  # Find the best card type, taking Jokers into account.
+  possibleCardTypes = []
+  nonJokerValues = set(card) - set('R')
+  for v in nonJokerValues:
+    # Replace all Jokers with this value. We don't need to replace
+    # multiple Jokers with multiple values because replacing all Jokers
+    # with a single value will always be better.
+    ncard = card.replace('R', v)
+    possibleCardTypes.append(getCardType(ncard))
+  return max(possibleCardTypes)
 
 def compareCards(c1: str, c2: str) -> int:
   assertCard(c1)
