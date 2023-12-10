@@ -23,17 +23,29 @@ def initGrid() -> tuple[ArrayGrid, Coords]:
 
 def getAdjacentNodes(grid: ArrayGrid, p: Coords) -> list[tuple[Coords, int]]:
   results = []
-  possibleMoves = {
-    (1, 0): set(['-', '7', 'J']),
-    (-1, 0): set(['-', 'L', 'F']),
-    (0, -1): set(['|', 'F', '7']),
+  incomingMoves = {
+    (1, 0): set(['-', 'J', '7']),
+    (-1, 0): set(['-', 'F', 'L']),
     (0, 1): set(['|', 'L', 'J']),
+    (0, -1): set(['|', 'F', '7']),
   }
-  for delta in possibleMoves:
+  outgoingMoves = {
+    # The start node is eligible to go anywhere.
+    'S': set(incomingMoves.keys()),
+    '-': [(1, 0), (-1, 0)],
+    '|': [(0, 1), (0, -1)],
+    'L': [(0, -1), (1, 0)],
+    'F': [(0, 1), (1, 0)],
+    'J': [(0, -1), (-1, 0)],
+    '7': [(0, 1), (-1, 0)],
+  }
+  v = grid.getValue(p.x, p.y, '.')
+  if v not in outgoingMoves:
+    return []
+  for delta in outgoingMoves[v]:
     dx, dy = delta
-    values = possibleMoves[delta]
     np = Coords(p.x + dx, p.y + dy)
-    if grid.getValue(np.x, np.y, '.') in values:
+    if grid.getValue(np.x, np.y, '.') in incomingMoves[delta]:
       results.append((np, 1))
   return results
 
