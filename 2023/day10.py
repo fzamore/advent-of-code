@@ -43,6 +43,8 @@ def part1():
   print('grid: %d x %d' % (grid.getWidth(), grid.getHeight()))
   print('start:', start)
 
+  # I think this makes the assumption that all reachable nodes from the
+  # start are part of the loop.
   result = dijkstraAllNodes(
     start,
     lambda p: getAdjacentNodes(grid, p),
