@@ -1,6 +1,6 @@
 from collections import defaultdict
 from heapq import heappush, heappop
-from typing import Any, Callable, DefaultDict, Dict, Hashable, Iterator, List, Sized, Tuple
+from typing import Any, Callable, DefaultDict, Dict, Hashable, Iterator, List, Tuple
 
 # Implementation of Dijkstra's shortest-path algorithm.
 # Params:
@@ -16,7 +16,34 @@ def dijkstra(
     getAdjacentNodes: Callable[[Hashable], Iterator[Tuple[Hashable, float]]],
     isDestNode: Callable[[Hashable], bool],
 ) -> Tuple[Hashable, float]:
+    result = _dijkstraInner(startNode, getAdjacentNodes, isDestNode)
+    return (result[0], result[1])
 
+# Implementation of Dijkstra's shortest-path algorithm which returns
+# shortest-path distances to all connected nodes in the graph.
+# Params:
+#  startNode (hashable): start node. distance to this node will always be zero
+#  getAdjacentNodes (node => list of (node, distance) tuples): nodes adjacent
+#       to given node. distances cannot be negative
+# Return value:
+#  dict[node, float] dictionary of distances from the start node to each
+#       connected node
+def dijkstraAllNodes(
+    startNode: Hashable,
+    getAdjacentNodes: Callable[[Hashable], Iterator[Tuple[Hashable, float]]],
+) -> Dict[Hashable, float]:
+    result = _dijkstraInner(
+        startNode,
+        getAdjacentNodes,
+        lambda node: False,
+    )
+    return result[2]
+
+def _dijkstraInner(
+    startNode: Hashable,
+    getAdjacentNodes: Callable[[Hashable], Iterator[Tuple[Hashable, float]]],
+    isDestNode: Callable[[Hashable], bool],
+) -> Tuple[Hashable, float, Dict[Hashable, float]]:
     # min-heap priority queue of points with distance from start as the key
     q: list[Any] = []
 
@@ -24,7 +51,7 @@ def dijkstra(
     d: DefaultDict[Hashable, float] = defaultdict(lambda: float('inf'))
 
     # set of visited nodes, so we don't visit nodes more than once
-    # (because we can't updated entries in the priority queue)
+    # (because we can't update entries in the priority queue)
     visited = set()
 
     # initialize with the start point
@@ -42,8 +69,9 @@ def dijkstra(
         assert nodeDist != float('inf'), 'Missing point in dict for node: %s' % str(node)
 
         if isDestNode(node):
-            # done
-            return (node, nodeDist)
+            # Done. (The third tuple value is empty because we don't need
+            # to return all distances in this case.)
+            return (node, nodeDist, {})
 
         for adjNode, adjNodeDist in getAdjacentNodes(node):
             assert adjNodeDist >= 0, 'negative weights not allowed: %d' % adjNodeDist
@@ -63,13 +91,13 @@ def dijkstra(
                 heappush(q, (newDist, adjNode))
 
     # There was no path from start to finish.
-    return (None, float('inf'))
+    return (None, float('inf'), d.copy())
 
 # Computes the shortest distance between each pair of vertices. Edge weights
 # can be negative, but there can be no negative cycles.
 # Params:
 #   vertices: list of vertices
-#   edgeWeights: mapping of edges to weighs. each edge is a (v1, v2) tuple
+#   edgeWeights: mapping of edges to weights. each edge is a (v1, v2) tuple
 # Return value:
 #    mapping of (v1, v2) tuples to the shortest distance from v1 to v2
 def floydWarshall(
