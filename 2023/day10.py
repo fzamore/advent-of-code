@@ -7,6 +7,10 @@ input = open('day10.txt').read().splitlines()
 
 Coords = namedtuple('Coords', ('x', 'y'))
 
+# The algorithm assumes that the loop containing the start is well-formed,
+# and that any pieces of pipe that aren't along this loop can be
+# discarded and treated as if there was no pipe there.
+
 # A "between point" represents the space between four points in a square.
 # We represent it using a single coordinate pair for the northwest
 # diagonal from the between point.
@@ -60,40 +64,39 @@ def getAdjacentNodes(grid: ArrayGrid, p: Coords) -> list[tuple[Coords, int]]:
       results.append((np, 1))
   return results
 
+# Returns whether the DFS is allowed to move in the given direction from
+# the given between point.
 def canMoveInDirection(
   betweenPoint: Coords,
   delta: tuple[int, int],
   loopPoints: dict[Coords, str],
 ) -> bool:
   x, y = betweenPoint.x, betweenPoint.y
-  # nw: (x, y), ne: (x + 1, y), se: (x + 1, y + 1), sw: (x, y + 1)
-  match delta:
-    case (-1, 0):
-      p1, p2 = Coords(x, y), Coords(x, y + 1)
-      v1, v2 = loopPoints.get(p1), loopPoints.get(p2)
-      if v1 in ['|', 'F', '7']:
-        return False
-    case (1, 0):
-      p1, p2 = Coords(x + 1, y), Coords(x + 1, y + 1)
-      v1, v2 = loopPoints.get(p1), loopPoints.get(p2)
-      if v1 in ['|', 'F', '7']:
-        return False
-    case (0, -1):
-      p1, p2 = Coords(x, y), Coords(x + 1, y)
-      v1, v2 = loopPoints.get(p1), loopPoints.get(p2)
-      if v1 in ['-', 'F', 'L']:
-        return False
-    case (0, 1):
-      p1, p2 = Coords(x + 1, y + 1), Coords(x, y + 1)
-      v1, v2 = loopPoints.get(p1), loopPoints.get(p2)
-      if v1 in ['-', 'J', '7']:
-        return False
-    case _:
-      assert False, 'bad delta: %s' % str(delta)
 
+  # Translation between delta and point to check.
+  deltaMap = {
+    (-1, 0): (0, 0),
+    (1, 0): (1, 0),
+    (0, -1): (0, 0),
+    (0, 1): (0, 1),
+  }
+
+  # Values that the point cannot be.
+  disallowedValues = {
+    (-1, 0): ('|', 'F', '7'),
+    (1, 0): ('|', 'F', '7'),
+    (0, -1): ('-', 'F', 'L'),
+    (0, 1): ('-', 'F', 'L'),
+  }
+
+  dx, dy = deltaMap[delta]
+  v = loopPoints.get(Coords(x + dx, y + dy))
+  if v in disallowedValues[delta]:
+    return False
   return True
 
-# returns true if can escape grid
+# Performs a DFS starting at the given between point. Returns true if
+# there is a path from this between point to the outside of the grid.
 def dfs(
   betweenPoint: Coords,
   seenBetweenPoints: set[Coords],
@@ -138,6 +141,10 @@ def dfs(
   # We haven't found a way out.
   return False
 
+# Performs a "traversal" from this point by starting a DFS from the
+# between point associated with this point. it updates the innerPoints and
+# outerPoints sets based on which points are found to be enclosed vs. have
+# a path to exit the grid.
 def traverseFromPoint(
   point: Coords,
   loopPoints: dict[Coords, str],
@@ -160,14 +167,19 @@ def traverseFromPoint(
     height,
   )
 
+  # The between points along this DFS traversal are either all enclosed,
+  # or all exposed, depending on the result of the DFS. Update the sets as
+  # needed.
   for bp in seenBetweenPoints:
     x, y = bp.x, bp.y
     tuples = [(x, y), (x + 1, y), (x + 1, y + 1), (x, y + 1)]
     for t in tuples:
       p = Coords(t[0], t[1])
       if p.x < 0 or p.x >= width or p.y < 0 or p.y >= height:
+        # This point is outside the grid.
         continue
       if p in loopPoints:
+        # Points in the loop are neither inner or outer.
         continue
       if result:
         assert p not in innerPoints, 'outer already in inner: %s' % str(p)
@@ -175,7 +187,6 @@ def traverseFromPoint(
       else:
         assert p not in outerPoints, 'inner already in outer: %s' % str(p)
         innerPoints.add(p)
-
 
 def printGrid(grid: ArrayGrid) -> None:
   # Wow, this is so much better. Thanks Aston.
@@ -194,8 +205,9 @@ def part1():
   print('grid: %d x %d' % (grid.getWidth(), grid.getHeight()))
   print('start:', start)
 
-  # I think this makes the assumption that all reachable nodes from the
-  # start are part of the loop.
+  # Run dijkstra to get distances from the start node to all other nodes.
+  # This makes the assumption that all reachable nodes from the start are
+  # part of the loop.
   result = dijkstraAllNodes(
     start,
     lambda p: getAdjacentNodes(grid, p),
@@ -209,6 +221,8 @@ def part2():
   print('grid: %d x %d' % (width, height))
   print('start:', start)
 
+  # Dijkstra is certainly overkill here, since I only care about
+  # identifying the loop, but I already had it from part 1.
   result = dijkstraAllNodes(
     start,
     lambda p: getAdjacentNodes(grid, p),
@@ -219,34 +233,27 @@ def part2():
   for p in result:
     loopPoints[p] = grid.getValue(p.x, p.y)
 
-  # Replace the start node with the correct pipe to make things easier
-  # down the line.
+  # Replace the start node with its underlying pipe to make things easier.
+  adjStartNodes = getAdjacentNodes(grid, start)
+  assert len(adjStartNodes) == 2, 'start node should have 2 adj nodes'
   replacements = {
-    '-': [(-1, 0), (1, 0)],
-    'F': [(1, 0), (0, 1)],
-    '7': [(-1, 0), (0, 1)],
-    '|': [(0, -1), (0, 1)],
-    'J': [(-1, 0), (0, -1)],
-    'L': [(1, 0), (0, -1)],
+    frozenset(((-1, 0), (1, 0))): '-',
+    frozenset(((1, 0), (0, 1))): 'F',
+    frozenset(((-1, 0), (0, 1))): '7',
+    frozenset(((0, -1), (0, 1))): '|',
+    frozenset(((-1, 0), (0, -1))): 'J',
+    frozenset(((1, 0), (0, -1))): 'L',
   }
-  connections = {
-    (-1, 0): ['F', 'L', '-'],
-    (1, 0): ['J', '7', '-'],
-    (0, -1): ['7', 'F' '|'],
-    (0, 1): ['J', 'L', '|'],
-  }
-  for r in replacements:
-    match = True
-    for dx, dy in replacements[r]:
-      p = Coords(start.x + dx, start.y + dy)
-      if loopPoints.get(p) not in connections[(dx, dy)]:
-        match = False
-    if match:
-      print('start match:', r)
-      loopPoints[start] = r
-      grid.setValue(start.x, start.y, r)
+  key = []
+  for (nx, ny), _ in adjStartNodes:
+    dx, dy = nx - start.x, ny - start.y
+    key.append((dx, dy))
+  r = replacements[frozenset(key)]
+  print('start match:', r)
+  loopPoints[start] = r
+  grid.setValue(start.x, start.y, r)
 
-  # Remove non-loop pipe from the grid to ease debugging
+  # Remove non-loop pipe from the grid to ease debugging.
   for y in range(height):
     for x in range(width):
       if grid.hasValue(x, y) and Coords(x, y) not in loopPoints:
@@ -255,6 +262,7 @@ def part2():
 
   innerPoints = set()
   outerPoints = set()
+  # Start a traversal from every grid point.
   for y in range(grid.getHeight()):
     for x in range(grid.getWidth()):
       traverseFromPoint(
@@ -266,11 +274,11 @@ def part2():
         height,
       )
 
-  print(len(outerPoints))
-  print(len(innerPoints))
-
   assert \
     len(innerPoints) + len(outerPoints) + len(loopPoints) == width * height, \
     'all points not accounted for'
+
+  print(len(outerPoints))
+  print(len(innerPoints))
 
 part2()
