@@ -37,17 +37,20 @@ def countWays(s: str, values: tuple[int]) -> int:
   result = 0
   value = values[0]
   for i in range(len(s)):
-    sub = s[i:]
-    if canPlaceValueAtStart(sub, value):
+    # Chop off everything before position i, since we're always trying to
+    # place a value at the beginning of the string.
+    substr = s[i:]
+    if canPlaceValueAtStart(substr, value):
       # Chop off the portion where the value was placed, plus one
       # character to account for the space.
-      v = countWays(sub[value + 1:], values[1:])
+      v = countWays(substr[value + 1:], values[1:])
       result += v
 
-    if s[i] == '#':
+    if substr[0] == '#':
       # If a value had to be placed here, do not look for additional
       # places to put this value.
       return result
+
   return result
 
 def part1():
@@ -64,6 +67,7 @@ def part1():
   print(result)
 
 def part2():
+  # number of folds
   mul = 5
 
   result = 0
@@ -72,8 +76,7 @@ def part2():
     print(s, values)
 
     s = ((s + '?') * mul)[:-1]
-    values = values * mul
-    r = countWays(s, tuple(values))
+    r = countWays(s, tuple(values * mul))
     print(r)
     print()
     result += r
