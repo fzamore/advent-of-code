@@ -1,5 +1,4 @@
-from itertools import combinations, permutations
-
+from functools import cache
 
 input = open('day12.txt').read().splitlines()
 
@@ -7,82 +6,78 @@ def parseLine(line: str) -> tuple[str, list[int]]:
   v = line.split()
   return v[0], list(map(int, v[1].split(',')))
 
-def canPlaceValue(s: list[str], value: int, index: int) -> bool:
-  if index + value > len(s):
+# Returns whether the given value can be placed at the beginning of the
+# given string.
+def canPlaceValueAtStart(s: str, value: int) -> bool:
+  if value > len(s):
     # Value would extend past the end of the string.
     return False
 
-  for i in range(index, index + value):
-    if s[i] not in ['#', '?']:
-      return False
-  if index > 0 and s[index - 1] not in ['.', '?']:
-    # No space on the left.
+  if s.count('.', 0, value) > 0:
+    # There is at least one ground value within the length of the value,
+    # so it is impossible to place.
     return False
-  if index + value < len(s) and s[index + value] not in ['.', '?']:
+
+  if value < len(s) and s[value] == '#':
     # No space on the right.
     return False
+
   return True
 
-# Finds the ways to place the value at valuesIndex, starting at startI
-# position in the input list / string. Results are put into the ways set.
-def findWaysForValue(
-  s: list[str],
-  values: list[int],
-  valuesIndex: int,
-  startI: int,
-  ways: set[str],
-) -> None:
-  if valuesIndex == len(values):
-    if '#' not in s[startI:]:
-      # Make sure we don't have any "#" characters left over.
-      r = ''.join([str(x) for x in s])
-      r = r.replace('?', '.')
-      ways.add(r)
-    return
+# Count the number of ways the given values can be placed within the given
+# string. This needs to be memoized or it won't complete in a reasonable
+# amount of time.
+@cache
+def countWays(s: str, values: tuple[int]) -> int:
+  if len(values) == 0:
+    # Placing no values is a single valid way if the string contains no #
+    # characters.
+    return 1 if '#' not in s else 0
 
-  value = values[valuesIndex]
-  for i in range(startI, len(s)):
-    if canPlaceValue(s, value, i):
-      # Copy the list
-      s2 = s.copy()
-      # Place the value
-      for j in range(value):
-        s2[i + j] = '#'
-      findWaysForValue(s2, values, valuesIndex + 1, i + value + 1, ways)
+  result = 0
+  value = values[0]
+  for i in range(len(s)):
+    sub = s[i:]
+    if canPlaceValueAtStart(sub, value):
+      # Chop off the portion where the value was placed, plus one
+      # character to account for the space.
+      v = countWays(sub[value + 1:], values[1:])
+      result += v
+
     if s[i] == '#':
       # If a value had to be placed here, do not look for additional
       # places to put this value.
-      return
-
-def verifyWay(s: str, way: str, values: list[int]) -> None:
-  assert len(way) == len(s)
-  for i in range(len(s)):
-    if way[i] == '.':
-      assert s[i] in ['.', '?'], 'bad ground'
-    elif way[i] == '#':
-      assert s[i] in ['#', '?'], 'bad number'
-    else:
-      assert False, 'bad character'
-
-  toCheck = [x for x in way.split('.') if x != '']
-  assert len(toCheck) == len(values), \
-    'bad values: %s %s || %s' % (values, s, way)
-  for i in range(len(values)):
-    assert len(toCheck[i]) == values[i], 'bad value'
+      return result
+  return result
 
 def part1():
   result = 0
   for line in input:
     s, values = parseLine(line)
     print(s, values)
-    ways = set()
-    findWaysForValue(list(s), values, 0, 0, ways)
-    [verifyWay(s, x, values) for x in ways]
-    [print(x) for x in ways]
-    print(len(ways))
+
+    r = countWays(s, tuple(values))
+    print(r)
     print()
-    result += len(ways)
+    result += r
 
   print(result)
 
-part1()
+def part2():
+  mul = 5
+
+  result = 0
+  for line in input:
+    s, values = parseLine(line)
+    print(s, values)
+
+    s = ((s + '?') * mul)[:-1]
+    values = values * mul
+    r = countWays(s, tuple(values))
+    print(r)
+    print()
+    result += r
+
+  print(result)
+
+part2()
