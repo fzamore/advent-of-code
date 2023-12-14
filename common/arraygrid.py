@@ -32,6 +32,24 @@ class ArrayGrid:
     def areCoordsWithinBounds(self, x: int, y: int) -> bool:
         return 0 <= x < self.getWidth() and 0 <= y < self.getHeight()
 
+    def copy(self) -> 'ArrayGrid':
+        grid = ArrayGrid(self._width, self._height)
+        for y in range(self._height):
+            for x in range(self._width):
+                grid.setValue(x, y, self.getValue(x, y))
+        return grid
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, self.__class__):
+            return False
+        return self._grid == other._grid
+
+    def __ne__(self, other: Any) -> bool:
+        return not self.__eq__(other)
+
+    def __hash__(self) -> int:
+        return hash(tuple(self._grid))
+
     def print2D(self, charMap: dict[Hashable, Hashable] = {}) -> None:
         print()
         for y in range(0, self._height):
