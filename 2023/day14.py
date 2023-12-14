@@ -17,6 +17,8 @@ def initGrid() -> ArrayGrid:
       grid.setValue(x, y, c)
   return grid
 
+# Tilts the grid in the given direction. This logic was initially
+# hardcoded for north, and then extended for all four directions.
 def tiltGrid(grid: ArrayGrid, dir: Direction) -> None:
   w, h = grid.getWidth(), grid.getHeight()
   match dir:
