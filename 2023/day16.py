@@ -70,6 +70,26 @@ def beamsToPrint(beams: set[Beam]) -> dict[tuple[int, int], str]:
     d[(beam.x, beam.y)] = b[beam.delta]
   return d
 
+def getAllBeams(grid: ArrayGrid, startBeam: Beam) -> set[Beam]:
+  beams = set([startBeam])
+  allBeams = beams.copy()
+  while True:
+    allBeamsCount = len(allBeams)
+    beams = iterateGrid(grid, beams)
+    allBeams.update(beams)
+    if len(allBeams) == allBeamsCount:
+      # We didn't add any new beams. Stop.
+      break
+
+  return allBeams
+
+def countEnergizedTiles(grid: ArrayGrid, allBeams: set[Beam]) -> int:
+  energizedTiles = set()
+  for x, y, _ in allBeams:
+    if grid.areCoordsWithinBounds(x, y):
+      energizedTiles.add((x, y))
+  return len(energizedTiles)
+
 def printBeamGrid(grid: ArrayGrid, beams: set[Beam]) -> None:
   d = beamsToPrint(beams)
 
@@ -102,23 +122,34 @@ def part1():
   print('grid size: %d x %d' % (grid.getWidth(), grid.getHeight()))
 
   startBeam = Beam(-1, 0, (1, 0))
+  allBeams = getAllBeams(grid, startBeam)
 
-  beams = set([startBeam])
-  allBeams = beams.copy()
-  while True:
-    allBeamsCount = len(allBeams)
-    beams = iterateGrid(grid, beams)
-    allBeams.update(beams)
-    if len(allBeams) == allBeamsCount:
-      # We didn't add any new beams. Stop.
-      break
   printBeamGrid(grid, allBeams)
   printEnergizedGrid(grid, allBeams)
 
-  energizedTiles = set()
-  for x, y, _ in allBeams:
-    if grid.areCoordsWithinBounds(x, y):
-      energizedTiles.add((x, y))
-  print(len(energizedTiles))
+  print(countEnergizedTiles(grid, allBeams))
 
-part1()
+def part2():
+  grid = initGrid()
+  w, h = grid.getWidth(), grid.getHeight()
+  print('grid size: %d x %d' % (w, h))
+
+  startBeams = []
+  for x in range(w):
+    startBeams.append(Beam(x, -1, (0, 1)))
+    startBeams.append(Beam(x, h, (0, -1)))
+  for y in range(h):
+    startBeams.append(Beam(-1, y, (1, 0)))
+    startBeams.append(Beam(w, y, (-1, 0)))
+
+  result = -1
+  for startBeam in startBeams:
+    print('start beam: (%d, %d)' % (startBeam.x, startBeam.y))
+    allBeams = getAllBeams(grid, startBeam)
+    r = countEnergizedTiles(grid, allBeams)
+    result = max(result, r)
+    print('  results:', r, result)
+
+  print(result)
+
+part2()
