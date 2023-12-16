@@ -5,44 +5,53 @@ input = open('day16.txt').read().splitlines()
 
 Beam = namedtuple('Beam', ['x', 'y', 'delta'])
 
+def initGrid() -> ArrayGrid:
+  w, h = len(input[0]), len(input)
+  grid = ArrayGrid(w, h)
+  for y in range(h):
+    for x in range(w):
+      grid.setValue(x, y, input[y][x])
+  return grid
+
 # Iterates the given bean one step and returns the resulting active beams
 # (either 0, 1, or 2).
-def iterateBeam(grid: ArrayGrid, beam: Beam) -> set[Beam]:
+def iterateBeam(grid: ArrayGrid, beam: Beam) -> list[Beam]:
   x, y, delta = beam
   assert delta in [(1, 0), (-1, 0), (0, 1), (0, -1)], 'bad delta'
   dx, dy = delta
   nx, ny = x + dx, y + dy
   if not grid.areCoordsWithinBounds(nx, ny):
-    return set()
+    return []
 
   tile = grid.getValue(nx, ny)
   match tile:
     case '.':
-      return set([Beam(nx, ny, delta)])
+      return [Beam(nx, ny, delta)]
     case '/':
-      return set([Beam(nx, ny, (-dy, -dx))])
+      return [Beam(nx, ny, (-dy, -dx))]
     case '\\':
-      return set([Beam(nx, ny, (dy, dx))])
+      return [Beam(nx, ny, (dy, dx))]
     case '-':
       if delta in [(1, 0), (-1, 0)]:
-        return set([Beam(nx, ny, delta)])
+        return [Beam(nx, ny, delta)]
       else:
-        return set([
+        return [
           Beam(nx, ny, (dy, dx)),
           Beam(nx, ny, (-dy, dx))
-        ])
+        ]
     case '|':
       if delta in [(0, 1), (0, -1)]:
-        return set([Beam(nx, ny, delta)])
+        return [Beam(nx, ny, delta)]
       else:
-        return set([
+        return [
           Beam(nx, ny, (dy, dx)),
           Beam(nx, ny, (dy, -dx))
-        ])
+        ]
     case _:
       assert False, 'bad tile: %s' % tile
 
-# Iterates each given beam in the grid by one step.
+# Iterates each given beam in the grid by one step. Returns the new active
+# beams after the iteration.
 def iterateGrid(grid: ArrayGrid, beams: set[Beam]) -> set[Beam]:
   resultBeams = set()
   for beam in beams:
@@ -87,14 +96,6 @@ def printEnergizedGrid(grid: ArrayGrid, beams: set[Beam]) -> None:
         print('.', end='')
     print()
   print()
-
-def initGrid() -> ArrayGrid:
-  w, h = len(input[0]), len(input)
-  grid = ArrayGrid(w, h)
-  for y in range(h):
-    for x in range(w):
-      grid.setValue(x, y, input[y][x])
-  return grid
 
 def part1():
   grid = initGrid()
