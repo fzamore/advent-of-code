@@ -5,6 +5,8 @@ input = open('day16.txt').read().splitlines()
 
 Beam = namedtuple('Beam', ['x', 'y', 'delta'])
 
+# Iterates the given bean one step and returns the resulting active beams
+# (either 0, 1, or 2).
 def iterateBeam(grid: ArrayGrid, beam: Beam) -> set[Beam]:
   x, y, delta = beam
   assert delta in [(1, 0), (-1, 0), (0, 1), (0, -1)], 'bad delta'
@@ -40,10 +42,11 @@ def iterateBeam(grid: ArrayGrid, beam: Beam) -> set[Beam]:
     case _:
       assert False, 'bad tile: %s' % tile
 
+# Iterates each given beam in the grid by one step.
 def iterateGrid(grid: ArrayGrid, beams: set[Beam]) -> set[Beam]:
-  resultBeams: set[Beam] = set()
+  resultBeams = set()
   for beam in beams:
-    resultBeams = resultBeams.union(iterateBeam(grid, beam))
+    resultBeams.update(iterateBeam(grid, beam))
   return resultBeams
 
 def beamsToPrint(beams: set[Beam]) -> dict[tuple[int, int], str]:
@@ -93,21 +96,21 @@ def initGrid() -> ArrayGrid:
       grid.setValue(x, y, input[y][x])
   return grid
 
-# this takes ~45 seconds to run
 def part1():
   grid = initGrid()
-  print('%d x %d' % (grid.getWidth(), grid.getHeight()))
+  print('grid size: %d x %d' % (grid.getWidth(), grid.getHeight()))
 
   startBeam = Beam(-1, 0, (1, 0))
 
   beams = set([startBeam])
   allBeams = beams.copy()
   while True:
+    allBeamsCount = len(allBeams)
     beams = iterateGrid(grid, beams)
-    if allBeams.union(beams) == allBeams:
+    allBeams.update(beams)
+    if len(allBeams) == allBeamsCount:
+      # We didn't add any new beams. Stop.
       break
-    allBeams = allBeams.union(beams)
-    print('beam count:', len(beams), len(allBeams))
   printBeamGrid(grid, allBeams)
   printEnergizedGrid(grid, allBeams)
 
