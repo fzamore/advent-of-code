@@ -21,6 +21,7 @@ def iterateBeam(grid: ArrayGrid, beam: Beam) -> list[Beam]:
   dx, dy = delta
   nx, ny = x + dx, y + dy
   if not grid.areCoordsWithinBounds(nx, ny):
+    # The beam has exited the grid. No need to trace it further.
     return []
 
   tile = grid.getValue(nx, ny)
@@ -50,15 +51,31 @@ def iterateBeam(grid: ArrayGrid, beam: Beam) -> list[Beam]:
     case _:
       assert False, 'bad tile: %s' % tile
 
-# Iterates each given beam in the grid by one step. Returns the new active
-# beams after the iteration.
-def iterateGrid(grid: ArrayGrid, beams: set[Beam]) -> set[Beam]:
-  resultBeams = set()
-  for beam in beams:
-    resultBeams.update(iterateBeam(grid, beam))
-  return resultBeams
+# Traces a single beam through the grid to its completion (either exiting
+# the grid or looping indefinitely).
+def traceBeam(grid: ArrayGrid, beam: Beam, beamSet: set[Beam]) -> None:
+  if beam in beamSet:
+    return
 
-def beamsToPrint(beams: set[Beam]) -> dict[tuple[int, int], str]:
+  beamSet.add(beam)
+
+  beams = iterateBeam(grid, beam)
+  while len(beams) > 0:
+    b = beams.pop()
+    if b in beamSet:
+      # We've already seen this beam. No need to trace it further.
+      continue
+
+    beamSet.add(b)
+    beams.extend(iterateBeam(grid, b))
+
+def beamSetToTileCount(beamSet: set[Beam]) -> int:
+  # Some coordinates may appear in the beam set multiple times, because
+  # there may be beams in the same positions going in different
+  # directions. Dedup them here by (x, y) coordinate.
+  return len(set([(b.x, b.y) for b in beamSet]))
+
+def beamsToPrint(beamSet: set[Beam]) -> dict[tuple[int, int], str]:
   b = {
     (1, 0): '>',
     (-1, 0): '<',
@@ -66,32 +83,20 @@ def beamsToPrint(beams: set[Beam]) -> dict[tuple[int, int], str]:
     (0, -1): '^',
   }
   d = {}
-  for beam in beams:
+  for beam in beamSet:
     d[(beam.x, beam.y)] = b[beam.delta]
   return d
 
-def getAllBeams(grid: ArrayGrid, startBeam: Beam) -> set[Beam]:
-  beams = set([startBeam])
-  allBeams = beams.copy()
-  while True:
-    allBeamsCount = len(allBeams)
-    beams = iterateGrid(grid, beams)
-    allBeams.update(beams)
-    if len(allBeams) == allBeamsCount:
-      # We didn't add any new beams. Stop.
-      break
+def computeEnergizedTileCount(grid: ArrayGrid, startBeam: Beam) -> int:
+  startBeams = iterateBeam(grid, startBeam)
 
-  return allBeams
+  beamSet: set[Beam] = set()
+  for sb in startBeams:
+    traceBeam(grid, sb, beamSet)
+  return beamSetToTileCount(beamSet)
 
-def countEnergizedTiles(grid: ArrayGrid, allBeams: set[Beam]) -> int:
-  energizedTiles = set()
-  for x, y, _ in allBeams:
-    if grid.areCoordsWithinBounds(x, y):
-      energizedTiles.add((x, y))
-  return len(energizedTiles)
-
-def printBeamGrid(grid: ArrayGrid, beams: set[Beam]) -> None:
-  d = beamsToPrint(beams)
+def printBeamGrid(grid: ArrayGrid, beamSet: set[Beam]) -> None:
+  d = beamsToPrint(beamSet)
 
   print()
   for y in range(grid.getHeight()):
@@ -104,8 +109,8 @@ def printBeamGrid(grid: ArrayGrid, beams: set[Beam]) -> None:
     print()
   print()
 
-def printEnergizedGrid(grid: ArrayGrid, beams: set[Beam]) -> None:
-  d = beamsToPrint(beams)
+def printEnergizedGrid(grid: ArrayGrid, beamSet: set[Beam]) -> None:
+  d = beamsToPrint(beamSet)
 
   print()
   for y in range(grid.getHeight()):
@@ -117,19 +122,24 @@ def printEnergizedGrid(grid: ArrayGrid, beams: set[Beam]) -> None:
     print()
   print()
 
-def part1():
+def part1() -> None:
   grid = initGrid()
   print('grid size: %d x %d' % (grid.getWidth(), grid.getHeight()))
 
   startBeam = Beam(-1, 0, (1, 0))
-  allBeams = getAllBeams(grid, startBeam)
 
-  printBeamGrid(grid, allBeams)
-  printEnergizedGrid(grid, allBeams)
+  startBeams = iterateBeam(grid, startBeam)
 
-  print(countEnergizedTiles(grid, allBeams))
+  beamSet: set[Beam] = set()
+  for sb in startBeams:
+    traceBeam(grid, sb, beamSet)
 
-def part2():
+  printBeamGrid(grid, beamSet)
+  printEnergizedGrid(grid, beamSet)
+
+  print(beamSetToTileCount(beamSet))
+
+def part2() -> None:
   grid = initGrid()
   w, h = grid.getWidth(), grid.getHeight()
   print('grid size: %d x %d' % (w, h))
@@ -145,8 +155,7 @@ def part2():
   result = -1
   for startBeam in startBeams:
     print('start beam: (%d, %d)' % (startBeam.x, startBeam.y))
-    allBeams = getAllBeams(grid, startBeam)
-    r = countEnergizedTiles(grid, allBeams)
+    r = computeEnergizedTileCount(grid, startBeam)
     result = max(result, r)
     print('  results:', r, result)
 
