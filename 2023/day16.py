@@ -57,7 +57,14 @@ def traceBeam(grid: ArrayGrid, beam: Beam, beamSet: set[Beam]) -> None:
   if beam in beamSet:
     return
 
-  beamSet.add(beam)
+  if grid.areCoordsWithinBounds(beam.x, beam.y):
+    # Make sure the beam is within the grid before adding it. Only an
+    # issue with the start beam.
+    beamSet.add(beam)
+  else:
+    assert beam.x == -1 or beam.y == -1 or \
+      beam.x == grid.getWidth() or beam.y == grid.getHeight(), \
+      'beam outside grid should be just along border: %s' % str(beam)
 
   beams = iterateBeam(grid, beam)
   while len(beams) > 0:
@@ -66,6 +73,7 @@ def traceBeam(grid: ArrayGrid, beam: Beam, beamSet: set[Beam]) -> None:
       # We've already seen this beam. No need to trace it further.
       continue
 
+    assert grid.areCoordsWithinBounds(b.x, b.y), 'iterated beam beyond grid'
     beamSet.add(b)
     beams.extend(iterateBeam(grid, b))
 
@@ -88,11 +96,8 @@ def beamsToPrint(beamSet: set[Beam]) -> dict[tuple[int, int], str]:
   return d
 
 def computeEnergizedTileCount(grid: ArrayGrid, startBeam: Beam) -> int:
-  startBeams = iterateBeam(grid, startBeam)
-
   beamSet: set[Beam] = set()
-  for sb in startBeams:
-    traceBeam(grid, sb, beamSet)
+  traceBeam(grid, startBeam, beamSet)
   return beamSetToTileCount(beamSet)
 
 def printBeamGrid(grid: ArrayGrid, beamSet: set[Beam]) -> None:
@@ -128,11 +133,8 @@ def part1() -> None:
 
   startBeam = Beam(-1, 0, (1, 0))
 
-  startBeams = iterateBeam(grid, startBeam)
-
   beamSet: set[Beam] = set()
-  for sb in startBeams:
-    traceBeam(grid, sb, beamSet)
+  traceBeam(grid, startBeam, beamSet)
 
   printBeamGrid(grid, beamSet)
   printEnergizedGrid(grid, beamSet)
