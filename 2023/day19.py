@@ -1,5 +1,6 @@
 from collections import namedtuple
 from enum import Enum
+from math import prod
 from typing import Optional
 
 input = open('day19.txt').read()
@@ -11,6 +12,7 @@ class Op(Enum):
 Rule = namedtuple('Rule', ['category', 'op', 'value', 'dst'])
 Workflow = namedtuple('Workflow', ['name', 'rules', 'dst'])
 Part = dict
+Rng = tuple[int, int] # inclusive
 
 def parseRule(ruleStr: str) -> Optional[Rule]:
   if ':' not in ruleStr:
@@ -27,6 +29,7 @@ def parseRule(ruleStr: str) -> Optional[Rule]:
     case _:
       assert False, 'bad rule: %s' % ruleStr
   value = int(v[0][2:])
+  assert 1 <= value <= 4000, 'bad value'
   dst = v[1]
   return Rule(category, op, value, dst)
 
@@ -72,6 +75,58 @@ def tracePart(workflows: dict[str, Workflow], part: Part) -> bool:
     dst = getNextWorkflow(part, workflow)
   return dst == 'A'
 
+def intersectRanges(r1: Rng, r2: Rng) -> Optional[Rng]:
+  start = max(r1[0], r2[0])
+  end = min(r1[1], r2[1])
+  if start > end:
+    return None
+  return (start, end)
+
+def iterateWorkflow(
+  workflowName: str,
+  workflows: dict[str, Workflow],
+  rngs: dict[str, Rng],
+) -> int:
+  print('processing workflow', workflowName, rngs)
+
+  if workflowName == 'R':
+    # reject
+    return 0
+
+  if workflowName == 'A':
+    # accept. multiply all range sizes together
+    return prod([rngs[c][1] - rngs[c][0] + 1 for c in rngs])
+
+  result = 0
+  workflow = workflows[workflowName]
+  for rule in workflow.rules:
+    c = rule.category
+    rng = rngs[c]
+    if rule.op == Op.LT:
+      assert rule.value > 1, '< 1 not yet implemented'
+      ruleRng1 = (1, rule.value - 1)
+      ruleRng2 = (rule.value, 4000)
+    else:
+      assert rule.value < 4000, '> 4000 not yet implemented'
+      ruleRng1 = (rule.value + 1, 4000)
+      ruleRng2 = (1, rule.value)
+
+    i1 = intersectRanges(rng, ruleRng1)
+    if i1 is not None:
+      # the rule matched. follow it
+      rngs1 = rngs.copy()
+      rngs1[c] = i1
+      result += iterateWorkflow(rule.dst, workflows, rngs1)
+
+    i2 = intersectRanges(rng, ruleRng2)
+    if i2 is not None:
+      # update our ranges and continue to the next rule
+      rngs[c] = i2
+
+  # process the workflow destination range
+  result += iterateWorkflow(workflow.dst, workflows, rngs)
+  return result
+
 def part1() -> None:
   workflowsStr, partsStr = input.split("\n\n")
   workflows = {}
@@ -89,4 +144,25 @@ def part1() -> None:
       r += sum(part.values())
   print(r)
 
-part1()
+def part2() -> None:
+  workflowsStr = input.split("\n\n")[0]
+  workflows = {}
+  for workflowStr in workflowsStr.splitlines():
+    workflow = parseWorkflow(workflowStr)
+    workflows[workflow.name] = workflow
+
+  print('workflow count:', len(workflows))
+
+  maxV = 4000
+  rngs = {
+    'x': (1, maxV),
+    'm': (1, maxV),
+    'a': (1, maxV),
+    's': (1, maxV),
+  }
+  start = 'in'
+  print(workflows[start])
+  print()
+  print(iterateWorkflow(start, workflows, rngs))
+
+part2()
