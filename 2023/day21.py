@@ -11,6 +11,8 @@ def initGrid() -> tuple[ArrayGrid, tuple[int, int]]:
       if input[y][x] == 'S':
         start = (x, y)
   assert start is not None
+  # clear the start point in the grid for easier checking
+  grid.setValue(start[0], start[1], '.')
   return grid, start
 
 def canMove(
@@ -33,7 +35,6 @@ def iterate(grid: ArrayGrid, points: set[tuple[int, int]]) -> set[tuple[int, int
 
 def part1() -> None:
   grid, start = initGrid()
-  grid.setValue(start[0], start[1], '.')
   grid.print2D()
 
   cur = set([start])
