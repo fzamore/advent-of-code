@@ -1,3 +1,5 @@
+from collections import defaultdict
+from copy import deepcopy
 from common.sparsegrid import SparseGrid
 
 input = open('day22.txt').read().splitlines()
@@ -69,6 +71,13 @@ def canBrickMoveDown(grid: SparseGrid, b: Brick) -> bool:
 
   return True
 
+def isBrickRestingOnBrick(top: Brick, bottom: Brick) -> bool:
+  cubesBottom = cubesInBrick(bottom)
+  for x, y, z in cubesInBrick(top):
+    if (x, y, z - 1) in cubesBottom:
+      return True
+  return False
+
 def moveBrickDown(grid: SparseGrid, b: Brick) -> Brick:
   ncubes = []
   for x, y, z in cubesInBrick(b):
@@ -98,10 +107,8 @@ def initGrid() -> tuple[SparseGrid, dict[int, Brick]]:
 
   return grid, bricks
 
-def part1() -> None:
-  grid, bricks = initGrid()
-  print('bricks:', len(bricks))
-
+def moveBricksDown(grid: SparseGrid, bricks: dict[int, Brick]) \
+  -> dict[int, Brick]:
   while True:
     bricksToMove = {}
     nbricks = {}
@@ -122,6 +129,37 @@ def part1() -> None:
       nbricks[id1] = moveBrickDown(grid, brick)
 
     bricks = nbricks
+  return bricks
+
+# Removes a brick and returns the number of other bricks that would
+# subsequently fall.
+def removeBrick(
+  bricks: dict[int, Brick],
+  brickId: int,
+  forwardDependencies: dict[int, set[int]],
+  reverseDependencies: dict[int, set[int]],
+) -> int:
+  result = 0
+  r = reverseDependencies[brickId].copy()
+  for id1 in r:
+    assert brickId in forwardDependencies[id1], 'bad dependency map'
+
+    # Remove bricks from the map.
+    forwardDependencies[id1].remove(brickId)
+    reverseDependencies[brickId].remove(id1)
+
+    if len(forwardDependencies[id1]) == 0:
+       # The last supporting brick was removed, so cascade the removal.
+       # Add one to the result to account for this brick that was removed.
+      result += 1 + \
+        removeBrick(bricks, id1, forwardDependencies, reverseDependencies)
+  return result
+
+def part1() -> None:
+  grid, bricks = initGrid()
+  print('bricks:', len(bricks))
+
+  bricks = moveBricksDown(grid, bricks)
 
   bricksCanDisintegrate = {}
   for id1 in bricks:
@@ -137,7 +175,6 @@ def part1() -> None:
       if canBrickMoveDown(grid, bricks[id2]):
         # Another brick can move down. The original brick cannot be disintegrated.
         canDisintegrate = False
-        break
     if canDisintegrate:
       bricksCanDisintegrate[id1] = bricks[id1]
 
@@ -147,4 +184,33 @@ def part1() -> None:
 
   print(len(bricksCanDisintegrate))
 
-part1()
+def part2() -> None:
+  grid, bricks = initGrid()
+  print('bricks:', len(bricks))
+
+  bricks = moveBricksDown(grid, bricks)
+
+  # Build forward- and reverse-dependency maps.
+  print('building dependencies')
+  forwardDependencies = defaultdict(set)
+  reverseDependencies = defaultdict(set)
+  for id1 in bricks:
+      for id2 in bricks:
+        if id1 == id2:
+          continue
+        if isBrickRestingOnBrick(bricks[id1], bricks[id2]):
+          forwardDependencies[id1].add(id2)
+          reverseDependencies[id2].add(id1)
+
+  print('removing bricks')
+  count = 0
+  for id in bricks:
+    count += removeBrick(
+      bricks,
+      id,
+      deepcopy(forwardDependencies),
+      deepcopy(reverseDependencies),
+    )
+  print(count)
+
+part2()

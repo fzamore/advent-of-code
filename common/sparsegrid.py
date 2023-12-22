@@ -140,6 +140,13 @@ class SparseGrid:
 
         return coords in self._marked and mark in self._marked[coords]
 
+    def copy(self) -> 'SparseGrid':
+        # This doesn't copy marks.
+        grid = SparseGrid(self._dimension)
+        for c in self.getAllCoords():
+            grid.setValue(c, self.getValue(c))
+        return grid
+
     def print2D(
         self,
         minCoords: Optional[list[Coord]] = None,
