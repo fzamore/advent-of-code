@@ -1,4 +1,4 @@
-from typing import Any, Hashable
+from typing import Any, Hashable, Iterator
 
 class ArrayGrid:
     def __init__(self, width: int, height: int) -> None:
@@ -32,6 +32,29 @@ class ArrayGrid:
     def areCoordsWithinBounds(self, x: int, y: int) -> bool:
         return 0 <= x < self.getWidth() and 0 <= y < self.getHeight()
 
+    def getAdjacentCoords(
+        self,
+        x: int,
+        y: int,
+        *,
+        includeDiagonals: bool = False,
+        checkGridBounds: bool = True,
+    ) -> Iterator[tuple[int, int]]:
+        if includeDiagonals:
+            deltas = [
+                (-1, -1), (0, -1), (1, -1),
+                (-1, 0), (1, 0),
+                (-1, 1), (0, 1), (-1, 1),
+            ]
+        else:
+            deltas = [(-1, 0), (0, -1), (1, 0), (0, 1)]
+
+        for dx, dy in deltas:
+            nx, ny = x + dx, y + dy
+            if not checkGridBounds or self.areCoordsWithinBounds(nx, ny):
+                yield (nx, ny)
+
+
     def copy(self) -> 'ArrayGrid':
         grid = ArrayGrid(self._width, self._height)
         for y in range(self._height):
@@ -49,6 +72,17 @@ class ArrayGrid:
 
     def __hash__(self) -> int:
         return hash(tuple(self._grid))
+
+    @staticmethod
+    def gridFromInput(inputLines: list[str]) -> 'ArrayGrid':
+        w, h = len(inputLines[0]), len(inputLines)
+        grid = ArrayGrid(w, h)
+        for y in range(h):
+            line = inputLines[y]
+            assert len(line) == w, 'grid input is not rectangle'
+            for x in range(w):
+                grid.setValue(x, y, line[x])
+        return grid
 
     def print2D(self, charMap: dict[Hashable, Hashable] = {}) -> None:
         print()
