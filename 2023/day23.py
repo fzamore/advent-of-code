@@ -88,20 +88,21 @@ def findLongestPath(
   path.extend(longestPath)
   return path
 
-def getSkipAheadNodes(
+def getSkipAheadEdges(
   grid: ArrayGrid,
   cur: Coords,
 ) -> list[tuple[Coords, int]]:
   x, y = cur
   assert grid.getValue(x, y) != '#', 'non-empty cell'
 
-  result = []
   adj = [c for c in grid.getAdjacentCoords(x, y) \
          if grid.getValue(c[0], c[1]) == '.']
+  if len(adj) == 2:
+    # We have no choice. Do not add this node to the graph.
+    return []
+
+  result = []
   for ax, ay in adj:
-    if len(adj) == 2:
-      # We have no choice. Do not add this node to the graph.
-      continue
     path: list[Coords] = [(ax, ay)]
     next, _ = skipAheadToChoice(grid, (ax, ay), (x, y), path, set())
     result.append((next, len(path)))
@@ -184,9 +185,9 @@ def part2() -> None:
     for x in range(w):
       if grid.getValue(x, y) == '#':
         continue
-      nodes = getSkipAheadNodes(grid, (x, y))
-      if len(nodes) > 0:
-        graph[(x, y)] = nodes
+      edges = getSkipAheadEdges(grid, (x, y))
+      if len(edges) > 0:
+        graph[(x, y)] = edges
   print('graph nodes:', len(graph))
 
   print(countLongestPathGraph(graph, start, None, end, 0))
