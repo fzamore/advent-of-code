@@ -54,7 +54,6 @@ def part1() -> None:
       if adjNode in unconnectedSet:
         unconnectedSet[adjNode] += 1
 
-  print(unconnectedSet)
   s1 = len(unconnectedSet)
   s2 = len(vertices) - s1
   print(s1, s2)
