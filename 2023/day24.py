@@ -156,16 +156,16 @@ def part2() -> None:
 
   # I stole this algorithm from Reddit.
   #
-  # Treat the new stone as if it is not moving by "adjusting" all existing
-  # stones by the new stone's x- and y-velocities (by subtraction:
-  # v_existingStone - v_newStone). Then, the problem becomes finding the
-  # single point at which all the adjusted stones intersect. We find the
-  # xy intersection (i.e., ignore z) for simplicity. Since the input
-  # velocity values are relatively small (i.e., less than 1000), we can
-  # brute force checking them, starting from zero and radiating outward in
-  # both positive and negative directions. (Note that the positions and
-  # time values are both very large, so these cannot easily be brute
-  # forced).
+  # Treat the new stone as if it is not moving by using the new stone's
+  # frame of reference and "adjusting" all existing stones by the new
+  # stone's x- and y-velocities (via subtraction: v_existingStone -
+  # v_newStone). Then, the problem becomes finding the single point at
+  # which all the adjusted stones intersect. We find the xy intersection
+  # (i.e., ignore z) for simplicity. Since the input velocity values are
+  # relatively small (i.e., less than 1000), we can brute force checking
+  # them, starting from zero and radiating outward in both positive and
+  # negative directions. (Note that the positions and time values are both
+  # very large, so these cannot easily be brute forced).
   #
   # So, for each brute-forced velocity pair, intersect the first stone
   # with all other stones, and if they all share the same xy-intersection
