@@ -80,7 +80,11 @@ def pulseModule(
         if name in conjunctionModulesToTrack:
           # This is one of the conjunction modules we're interested in
           # tracking when a high pulse is emitted. Record how many button
-          # presses it took to get to this point.
+          # presses it took to get to this point. We explicitly track this
+          # at the moment the conjunction module outputs its pulse (rather
+          # than after the button press is completed) because the same
+          # button press will trigger multiple pulses from this
+          # conjunction module.
           assert len(inputValues[name]) == 1, 'bad conj module tracking'
           conjunctionModulesToTrack[name] = buttonPressCount
       else:
