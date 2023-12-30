@@ -79,8 +79,8 @@ def pulseModule(
 
         if name in conjunctionModulesToTrack:
           # This is one of the conjunction modules we're interested in
-          # tracking when it emits a high pulse. Record how many button
-          # presses it took to get too thiss point.
+          # tracking when a high pulse is emitted. Record how many button
+          # presses it took to get to this point.
           assert len(inputValues[name]) == 1, 'bad conj module tracking'
           conjunctionModulesToTrack[name] = buttonPressCount
       else:
@@ -145,8 +145,6 @@ def part1() -> None:
   print(high * low)
 
 def part2() -> None:
-  modules, inputValues = parseInput()
-
   # This approach is heavily dependent on the following input structure.
   #
   # The target module is an untyped module (rx). This module has a single
@@ -157,10 +155,12 @@ def part2() -> None:
   # high pulses, which means all four conjunction modules in L2 need to
   # emit high pulses in the same button press.
   #
-  # It turns out that each L2 conjunction module emits a high pulse every
-  # X button presses, where X is different for each module. So, we find
-  # this value for each module in L2 and take the LCM of them all.
+  # It turns out that each L2 conjunction module emits a high pulse in a
+  # consistent pattern: every X button presses, where X is different for
+  # each module. So, we find this value for each module in L2 and take the
+  # LCM of them all.
 
+  modules, inputValues = parseInput()
   print('counts:', len(modules), len(inputValues))
 
   target = 'rx'
