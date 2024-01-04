@@ -1,4 +1,4 @@
-from typing import Any, Hashable, Iterator
+from typing import Any, Callable, Hashable, Iterator, Optional
 
 class ArrayGrid:
     def __init__(self, width: int, height: int) -> None:
@@ -74,14 +74,18 @@ class ArrayGrid:
         return hash(tuple(self._grid))
 
     @staticmethod
-    def gridFromInput(inputLines: list[str]) -> 'ArrayGrid':
+    def gridFromInput(
+        inputLines: list[str],
+        elementFn: Optional[Callable[[str], Any]] = None,
+    ) -> 'ArrayGrid':
         w, h = len(inputLines[0]), len(inputLines)
         grid = ArrayGrid(w, h)
         for y in range(h):
             line = inputLines[y]
             assert len(line) == w, 'grid input is not rectangle'
             for x in range(w):
-                grid.setValue(x, y, line[x])
+                v = line[x] if elementFn is None else elementFn(line[x])
+                grid.setValue(x, y, v)
         return grid
 
     def print2D(self, charMap: dict[Hashable, Hashable] = {}) -> None:

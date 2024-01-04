@@ -1,6 +1,8 @@
 from collections import defaultdict
 from heapq import heappush, heappop
-from typing import Any, Callable, DefaultDict, Dict, Hashable, Iterator, List, Tuple
+from typing import Any, Callable, DefaultDict, Dict, Hashable, Iterable, List, Optional, Tuple, TypeVar
+
+T = TypeVar('T', bound=Hashable)
 
 # Implementation of Dijkstra's shortest-path algorithm.
 # Params:
@@ -12,10 +14,10 @@ from typing import Any, Callable, DefaultDict, Dict, Hashable, Iterator, List, T
 # Return value:
 #  (node, distance) tuple for destination node and distance to that node
 def dijkstra(
-    startNode: Hashable,
-    getAdjacentNodes: Callable[[Hashable], Iterator[Tuple[Hashable, float]]],
-    isDestNode: Callable[[Hashable], bool],
-) -> Tuple[Hashable, float]:
+    startNode: T,
+    getAdjacentNodes: Callable[[T], Iterable[Tuple[T, float]]],
+    isDestNode: Callable[[T], bool],
+) -> Tuple[Optional[T], float]:
     result = _dijkstraInner(startNode, getAdjacentNodes, isDestNode)
     return (result[0], result[1])
 
@@ -29,9 +31,9 @@ def dijkstra(
 #  dict[node, float] dictionary of distances from the start node to each
 #       connected node
 def dijkstraAllNodes(
-    startNode: Hashable,
-    getAdjacentNodes: Callable[[Hashable], Iterator[Tuple[Hashable, float]]],
-) -> Dict[Hashable, float]:
+    startNode: T,
+    getAdjacentNodes: Callable[[T], Iterable[Tuple[T, float | int]]],
+) -> Dict[T, float | int]:
     result = _dijkstraInner(
         startNode,
         getAdjacentNodes,
@@ -40,15 +42,15 @@ def dijkstraAllNodes(
     return result[2]
 
 def _dijkstraInner(
-    startNode: Hashable,
-    getAdjacentNodes: Callable[[Hashable], Iterator[Tuple[Hashable, float]]],
-    isDestNode: Callable[[Hashable], bool],
-) -> Tuple[Hashable, float, Dict[Hashable, float]]:
+    startNode: T,
+    getAdjacentNodes: Callable[[T], Iterable[Tuple[T, float | int]]],
+    isDestNode: Callable[[T], bool],
+) -> Tuple[Optional[T], float | int, Dict[T, float | int]]:
     # min-heap priority queue of points with distance from start as the key
     q: list[Any] = []
 
     # map from point to distance from start
-    d: DefaultDict[Hashable, float] = defaultdict(lambda: float('inf'))
+    d: DefaultDict[T, float] = defaultdict(lambda: float('inf'))
 
     # set of visited nodes, so we don't visit nodes more than once
     # (because we can't update entries in the priority queue)
