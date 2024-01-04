@@ -5,11 +5,17 @@ input = open('day17.txt').read().splitlines()
 
 Coords = tuple[int, int]
 
-# We store a state as a (Coords, isHorizontal) tuple.
+# We store a state as a (Coords, isHorizontal) tuple that represents a
+# given node and whether we're moving horizontally or vertically.
 State = tuple[Coords, bool]
 
-def getNextStates(grid: ArrayGrid, startNode: Coords, state: State) -> \
-  list[tuple[State, int]]:
+def getNextStates(
+  grid: ArrayGrid,
+  startNode: Coords,
+  state: State,
+  minStepCount: int = 1,
+  maxStepCount: int = 3,
+) -> list[tuple[State, int]]:
   (x, y), isHoriz = state
 
   if isHoriz:
@@ -33,12 +39,16 @@ def getNextStates(grid: ArrayGrid, startNode: Coords, state: State) -> \
   # line, and since we start by going right and down 1, 2, and 3 steps
   # from the start, this process is guaranteed to hit every cell in the
   # grid.
-  stepCount = 3
   results = []
   for dx, dy in deltas:
     value = 0
-    for i in range(stepCount):
-      nx, ny = x + (i + 1) * dx, y + (i + 1) * dy
+    # If minStepCount > 1, we need to add values before any valid moves.
+    for i in range(1, minStepCount):
+      nx, ny = x + i * dx, y + i * dy
+      if grid.areCoordsWithinBounds(nx, ny):
+        value += grid.getValue(nx, ny)
+    for i in range(minStepCount, maxStepCount + 1):
+      nx, ny = x + i * dx, y + i * dy
       if not grid.areCoordsWithinBounds(nx, ny):
         continue
       value += grid.getValue(nx, ny)
@@ -51,7 +61,6 @@ def getNextStates(grid: ArrayGrid, startNode: Coords, state: State) -> \
 def part1() -> None:
   grid = ArrayGrid.gridFromInput(input, lambda x: int(x))
   w, h = grid.getWidth(), grid.getHeight()
-  assert w == h, 'not a square'
   print('grid: %d x %d' % (w, h))
   grid.print2D()
 
@@ -62,4 +71,20 @@ def part1() -> None:
   results = dijkstraAllNodes(startState, lambda s: getNextStates(grid, startNode, s))
   print(min(results[s] for s in results if s[0] == endNode))
 
-part1()
+def part2() -> None:
+  grid = ArrayGrid.gridFromInput(input, lambda x: int(x))
+  w, h = grid.getWidth(), grid.getHeight()
+  print('grid: %d x %d' % (w, h))
+  grid.print2D()
+
+  startNode = (0, 0)
+  endNode = (w - 1, h - 1)
+
+  startState = (startNode, True) # isHoriz doesn't matter for the start node
+  results = dijkstraAllNodes(
+    startState,
+    lambda s: getNextStates(grid, startNode, s, 4, 10),
+  )
+  print(min(results[s] for s in results if s[0] == endNode))
+
+part2()
