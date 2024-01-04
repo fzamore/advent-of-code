@@ -36,9 +36,9 @@ def getNextStates(
   # possible next states. The value of each state is the sum of the grid
   # values along the path (up to three values). By first turning, we
   # eliminate the possibility of going more than 3 steps in a straight
-  # line, and since we start by going right and down 1, 2, and 3 steps
-  # from the start, this process is guaranteed to hit every cell in the
-  # grid.
+  # line, and since we begin by going right and down 1, 2, and 3 steps
+  # from the start node, this process is guaranteed to encounter every
+  # cell in the grid.
   results = []
   for dx, dy in deltas:
     value = 0
@@ -69,6 +69,7 @@ def part1() -> None:
 
   startState = (startNode, True) # isHoriz doesn't matter for the start node
   results = dijkstraAllNodes(startState, lambda s: getNextStates(grid, startNode, s))
+  # Find the minimum result that includes the end node.
   print(min(results[s] for s in results if s[0] == endNode))
 
 def part2() -> None:
