@@ -87,7 +87,6 @@ def part1() -> None:
     y += dy * qty
 
   print('segments:', len(segments))
-
   print(shoelaceAreaIncludingBorder(segments))
 
 def part2() -> None:
