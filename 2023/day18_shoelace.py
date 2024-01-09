@@ -37,7 +37,7 @@ def shoelaceAreaIncludingBorder(segments: list[Segment]) -> int:
     # Shoelace.
     innerValue += (x1 * y2) - (x2 * y1)
 
-    # All points oon the segment are half points except the corners.
+    # All points on the segment are half points except the corners.
     halfPoints += length - 1
 
     nextDelta = segments[(i + 1) % len(segments)].delta
