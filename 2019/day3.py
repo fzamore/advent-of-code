@@ -1,5 +1,3 @@
-from common.sparsegrid import SparseGrid
-
 input = open('day3.txt').read().splitlines()
 
 def getWirePoints(wire: list[str]) -> list[tuple[int, int]]:
@@ -37,5 +35,21 @@ def part1() -> None:
   ])
   print(ans)
 
+def part2() -> None:
+  wire1, wire2 = [x.split(',') for x in input]
+  print('lengths:', len(wire1), len(wire2))
 
-part1()
+  wire1Points = getWirePoints(wire1)
+  print('wire1Points:', len(wire1Points))
+
+  wire2Points = getWirePoints(wire2)
+  print('wire2Points:', len(wire2Points))
+
+  intersections = set(wire1Points).intersection(wire2Points)
+  # 0-indexed means adding one for each index (hence the "+ 2").
+  ans = min(
+    [wire1Points.index(ix) + wire2Points.index(ix) + 2 for ix in intersections],
+  )
+  print(ans)
+
+part2()
