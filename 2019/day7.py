@@ -1,6 +1,9 @@
-from itertools import permutations
+from collections import namedtuple
+from itertools import cycle, permutations
 
 input = open('day7.txt').read().split(',')
+
+State = namedtuple('State', ['pc', 'processedPhase'])
 
 def getParameterValues(memory: list[int], baseI: int) -> list[int]:
   value = memory[baseI]
@@ -26,71 +29,105 @@ def getParameterValues(memory: list[int], baseI: int) -> list[int]:
   assert len(values) in [1, 2], 'bad values: %s' % values
   return values
 
-def runMachine(memory: list[int], input1: int, input2: int) -> int:
-  processedInput = False
-  i = 0
-  while (value := memory[i]) != 99:
+# We need to save state (especially the program counter) from the previous
+# execution on each amplifier.
+def runMachine(
+  memory: list[int],
+  state: State,
+  phase: int,
+  chainedInput: int,
+) -> tuple[int, State, int]: # (opcode, State, value)
+  pc = state.pc
+  processedPhase = state.processedPhase
+  while (value := memory[pc]) != 99:
     opcode = value % 100
-    paramValues = getParameterValues(memory, i)
+    paramValues = getParameterValues(memory, pc)
     match opcode:
       case 1:
-        assert len(paramValues) == 2, 'bad addition: %s' % [i, value, paramValues]
-        dst = memory[i + 3]
+        assert len(paramValues) == 2, 'bad addition: %s' % [pc, value, paramValues]
+        dst = memory[pc + 3]
         memory[dst] = paramValues[0] + paramValues[1]
-        i += 4
+        pc += 4
       case 2:
-        assert len(paramValues) == 2, 'bad multiplication: %s' % [i, value, paramValues]
-        dst = memory[i + 3]
+        assert len(paramValues) == 2, 'bad multiplication: %s' % [pc, value, paramValues]
+        dst = memory[pc + 3]
         memory[dst] = paramValues[0] * paramValues[1]
-        i += 4
+        pc += 4
       case 3:
-        dst = memory[i + 1]
-        input = input2 if processedInput else input1
-        print('input inst at:', i, input)
-        processedInput = True
+        dst = memory[pc + 1]
+        input = chainedInput if processedPhase else phase
+        processedPhase = True
+        print('input inst at:', pc, input)
         memory[dst] = input
-        i += 2
+        pc += 2
       case 4:
         assert len(paramValues) == 1, 'bad output: %s' % paramValues
-        print('OUTPUT:', paramValues[0])
-        i += 2
-        return paramValues[0]
+        output = paramValues[0]
+        print('OUTPUT:', output)
+        pc += 2
+        return opcode, State(pc, processedPhase), output
       case 5:
-        assert len(paramValues) == 2, 'bad jump-if-true: %s' % [i, value, paramValues]
+        assert len(paramValues) == 2, 'bad jump-if-true: %s' % [pc, value, paramValues]
         if paramValues[0] != 0:
-          i = paramValues[1]
+          pc = paramValues[1]
         else:
-          i += 3
+          pc += 3
       case 6:
-        assert len(paramValues) == 2, 'bad jump-if-false: %s' % [i, value, paramValues]
+        assert len(paramValues) == 2, 'bad jump-if-false: %s' % [pc, value, paramValues]
         if paramValues[0] == 0:
-          i = paramValues[1]
+          pc = paramValues[1]
         else:
-          i += 3
+          pc += 3
       case 7:
-        assert len(paramValues) == 2, 'bad less than: %s' % [i, value, paramValues]
-        dst = memory[i + 3]
+        assert len(paramValues) == 2, 'bad less than: %s' % [pc, value, paramValues]
+        dst = memory[pc + 3]
         memory[dst] = 1 if paramValues[0] < paramValues[1] else 0
-        i += 4
+        pc += 4
       case 8:
-        assert len(paramValues) == 2, 'bad equals: %s' % [i, value, paramValues]
-        dst = memory[i + 3]
+        assert len(paramValues) == 2, 'bad equals: %s' % [pc, value, paramValues]
+        dst = memory[pc + 3]
         memory[dst] = 1 if paramValues[0] == paramValues[1] else 0
-        i += 4
+        pc += 4
       case _:
         assert False, 'bad opcode: %s' % opcode
 
-  assert False, 'did not encounter output instruction'
+  assert value == 99, 'bad halt opcode'
+  return value, State(pc, processedPhase), chainedInput
 
 def runSequence(memory: list[int], seq: list[int]) -> int:
   assert len(seq) == 5, 'bad sequence'
   chainedValue = 0
   for seqValue in seq:
-    chainedValue = runMachine(memory, seqValue, chainedValue)
+    _, _, chainedValue = runMachine(memory, State(0, False), seqValue, chainedValue)
   return chainedValue
+
+def runLoop(memory: list[int], phases: list[int]) -> int:
+  assert len(phases) == 5, 'bad phases'
+  programs = [memory.copy() for _ in range(5)]
+  states = [State(0, False) for _ in range(5)]
+
+  input = 0
+  for i in cycle(range(5)): # infinite cycle
+    opcode, newState, output = runMachine(
+      programs[i],
+      states[i],
+      phases[i],
+      input,
+    )
+    if opcode == 99:
+      return output
+
+    input = output
+    states[i] = newState
+
+  assert False, 'should have hit halt opcode'
 
 def part1() -> None:
   memory = list(map(int, input))
   print(max([runSequence(memory, list(s)) for s in permutations(range(5))]))
 
-part1()
+def part2() -> None:
+  memory = list(map(int, input))
+  print(max([runLoop(memory, list(s)) for s in permutations(range(5, 10))]))
+
+part2()
