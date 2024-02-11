@@ -102,4 +102,8 @@ def part1() -> None:
   memory = dict(zip(range(len(input)), list(map(int, input))))
   runMachine(memory, 1)
 
-part1()
+def part2() -> None:
+  memory = dict(zip(range(len(input)), list(map(int, input))))
+  runMachine(memory, 2)
+
+part2()
