@@ -165,11 +165,11 @@ class SparseGrid:
 
     def print2D(
         self,
+        *,
         minCoords: Optional[list[Coord]] = None,
         maxCoords: Optional[list[Coord]] = None,
         sep: str = '',
         default: Any = None,
-        *,
         charMap: dict[Hashable, Hashable] = {},
     ) -> None:
         assert self._dimension == 2, 'Cannot print2D with dimension: %d' % self._dimension
