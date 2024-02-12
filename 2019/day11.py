@@ -134,4 +134,11 @@ def part1() -> None:
   runMachine(memory, grid, (0, 0))
   print(len(grid.getAllCoords()))
 
-part1()
+def part2() -> None:
+  memory = dict(zip(range(len(input)), list(map(int, input))))
+  grid = SparseGrid(2)
+  grid.setValue((0, 0), 1)
+  runMachine(memory, grid, (0, 0))
+  grid.print2D(default=' ', charMap = {1: '#', 0: ' '})
+
+part2()
