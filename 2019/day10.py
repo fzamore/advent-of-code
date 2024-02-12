@@ -43,9 +43,10 @@ def asteroidKey(station: Coords, satellite: Coords) -> tuple[int, float]:
   dx, dy = sx - x, sy - y
   assert dx != 0 or dy != 0, 'dx and dy cannot both be zero'
   # Highest-order bit is quadrant, then slope (top-right quadrant is 1,
-  # then increase clockwise). We treat vertical slopes as negative
-  # infinity, which means that vertical slopes need to be the first
-  # entries in quadrants 1 and 3, and not appear at all in quadrants 2 and 4.
+  # then increase clockwise). Return values should be in ascending order.
+  # We treat vertical slopes as negative infinity, which means that
+  # vertical slopes need to be the first entries in quadrants 1 and 3, and
+  # not appear at all in quadrants 2 and 4.
   if dx >= 0 and dy < 0:
     quadrant = 1
   elif dx > 0 and dy >= 0:
