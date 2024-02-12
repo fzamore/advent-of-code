@@ -41,24 +41,22 @@ def asteroidKey(station: Coords, satellite: Coords) -> tuple[int, float]:
   x, y = station
   sx, sy = satellite
   dx, dy = sx - x, sy - y
-  assert dx != 0 or dy != 0, 'dx and dy cannot both be zero'
-  # Highest-order bit is quadrant, then slope (top-right quadrant is 1,
-  # then increase clockwise). Return values should be in ascending order.
-  # We treat vertical slopes as negative infinity, which means that
-  # vertical slopes need to be the first entries in quadrants 1 and 3, and
-  # not appear at all in quadrants 2 and 4.
-  if dx >= 0 and dy < 0:
-    quadrant = 1
-  elif dx > 0 and dy >= 0:
-    quadrant = 2
-  elif dx <= 0 and dy >= 0:
-    quadrant = 3
-  elif dx < 0 and dy < 0:
-    quadrant = 4
+
+  # Highest-order bit is which "half" (left or right) the asteroid is in,
+  # then slope (right half is 1, left half is 2). Return values should be
+  # in ascending order. We treat vertical slopes as negative infinity,
+  # which means that vertical slopes need to be the first entries in half 1
+  # if the satellite is above the station (dy < 0), and the first
+  # entries in half 2 if the satellite is bellow the station (dy > 0).
+  if dx > 0:
+    half = 1
+  elif dx < 0:
+    half = 2
   else:
-    assert False, 'bad quadrant math: %d, %d' % (dx, dy)
+    assert dy != 0, 'dx and dy cannot both be zero'
+    half = 1 if dy < 0 else 2
   slope = -float('inf') if dx == 0 else dy / dx
-  return quadrant, slope
+  return half, slope
 
 def part1() -> None:
   grid = SparseGrid.gridFrom2DInput(input, lambda v: v if v == '#' else None)
