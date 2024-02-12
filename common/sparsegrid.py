@@ -1,4 +1,4 @@
-from typing import Any, Iterator, Optional, Sized
+from typing import Any, Callable, Iterator, Optional, Sized
 
 # Type for an individual coordinate value. We only support integer coordinates.
 Coord = int
@@ -145,6 +145,22 @@ class SparseGrid:
         grid = SparseGrid(self._dimension)
         for c in self.getAllCoords():
             grid.setValue(c, self.getValue(c))
+        return grid
+
+    @staticmethod
+    def gridFrom2DInput(
+        inputLines: list[str],
+        elementFn: Optional[Callable[[str], Any]] = None,
+    ) -> 'SparseGrid':
+        w, h = len(inputLines[0]), len(inputLines)
+        grid = SparseGrid(2)
+        for y in range(h):
+            line = inputLines[y]
+            assert len(line) == w, 'grid input is not rectangle'
+            for x in range(w):
+                v = line[x] if elementFn is None else elementFn(line[x])
+                if v is not None:
+                    grid.setValue((x, y), v)
         return grid
 
     def print2D(
