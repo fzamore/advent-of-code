@@ -1,6 +1,6 @@
 input = open('day16.txt').read().strip()
 
-def singleFFT(signal: str, patterns: list[tuple[int, int]]) -> str:
+def singleFFT(signal: list[int], patterns: list[tuple[int, int]]) -> int:
   result = 0
   i = 0
   pi = 0
@@ -16,24 +16,23 @@ def singleFFT(signal: str, patterns: list[tuple[int, int]]) -> str:
       first = False
 
     if value != 0 and length != 0:
-      section = signal[i:i + length]
-      result += value * sum([int(x) for x in section])
+      result += value * sum(signal[i:i + length])
 
     i += length
     pi = (pi + 1) % len(patterns)
 
-  return str(abs(result) % 10)
+  return abs(result) % 10
 
-def onePhase(signal: str, basePattern: list[int]) -> str:
-  result = ''
+def onePhase(signal: list[int], basePattern: list[int]) -> list[int]:
+  result = []
   for i in range(len(signal)):
     patterns = [(i + 1, e) for e in basePattern]
-    result += singleFFT(signal, patterns)
+    result.append(singleFFT(signal, patterns))
   return result
 
 def part1() -> None:
   print('input length:', len(input))
-  signal = input
+  signal = list(map(int, input))
   pattern = [0, 1, 0, -1]
   n = 100
   for _ in range(n):
