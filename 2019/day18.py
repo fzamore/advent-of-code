@@ -10,15 +10,19 @@ Coords = tuple[int, int]
 # current position (represented by string value - either "@" or a key).
 State = namedtuple('State', ['keys', 'pos'])
 
+# One position per robot and one set of keys for all robots in part 2.
+MultiState = namedtuple('MultiState', ['positions', 'keys'])
+
 def getAdjacentStates(
   adjacencies: dict[str, dict[str, tuple[int, list[str]]]],
-  state: State,
-):
+  keys: tuple[str],
+  currentKey: str,
+) -> list[tuple[State, int]]:
   results = []
-  keySet = set(state.keys)
+  keySet = set(keys)
   # Loop through all adjacencies from our current position.
-  for key in adjacencies[state.pos]:
-    dist, doorsInPath = adjacencies[state.pos][key]
+  for key in adjacencies[currentKey]:
+    dist, doorsInPath = adjacencies[currentKey][key]
     if key not in keySet:
       # We've already picked up this key. Skip it.
       continue
@@ -31,7 +35,7 @@ def getAdjacentStates(
 
     # We've found a valid key to pick up. Remove it from our keys
     # remaining, and add the new state to our results list.
-    nkeys = list(state.keys)
+    nkeys = list(keys)
     nkeys.remove(key)
     results.append((State(tuple(nkeys), key), dist))
 
@@ -43,12 +47,43 @@ def explore(
   keys: list[str],
 ) -> int:
   def getAdj(state: State) -> list[tuple[State, int]]:
-    return getAdjacentStates(adjacencies, state)
+    return getAdjacentStates(adjacencies, state.keys, state.pos)
 
   def isDone(state: State) -> bool:
     return len(state.keys) == 0
 
   _, steps = dijkstra(State(tuple(keys), start), getAdj, isDone)
+
+  assert isinstance(steps, int) or steps.is_integer(), \
+    'non-int returned from dijkstra: %s' % str(steps)
+  return int(steps)
+
+def explore2(
+  adjacencies: dict[str, dict[str, tuple[int, list[str]]]],
+  startPositions: list[str],
+  keys: list[str],
+) -> int:
+  assert len(startPositions) == 4, 'wrong number of states'
+
+  def getAdj(multiState: MultiState) -> list[tuple[MultiState, int]]:
+    results = []
+    for i, pos in enumerate(multiState.positions):
+      for newState, steps in getAdjacentStates(adjacencies, multiState.keys, pos):
+        # Move the robot to its new position.
+        positions = list(multiState.positions)
+        positions[i] = newState.pos
+
+        # Collect the key.
+        keys = list(multiState.keys)
+        keys.remove(newState.pos)
+
+        results.append((MultiState(tuple(positions), tuple(keys)), steps))
+    return results
+
+  def isDone(multiState: MultiState) -> bool:
+    return len(multiState.keys) == 0
+
+  _, steps = dijkstra(MultiState(tuple(startPositions), tuple(keys)), getAdj, isDone)
 
   assert isinstance(steps, int) or steps.is_integer(), \
     'non-int returned from dijkstra: %s' % str(steps)
@@ -134,4 +169,58 @@ def part1() -> None:
   keyStrs = [k[1] for k in keys]
   print(explore(adjacencies, '@', keyStrs))
 
-part1()
+def part2() -> None:
+  grid = ArrayGrid.gridFromInput(input)
+  w, h = grid.getWidth(), grid.getHeight()
+  print('grid: %d x %d' % (w, h))
+  grid.print2D()
+
+  starts = []
+  keyLocations = {}
+  for x in range(w):
+    for y in range(h):
+      v = grid.getValue(x, y)
+      if v == '@':
+        starts.append((x, y))
+      elif v.islower():
+        keyLocations[v] = x, y
+
+  assert len(starts) in [1, 4], 'did not find correct number of starts'
+
+  if len(starts) == 1:
+    # Convert grid if necessary.
+    print('fixing starts')
+    start = starts[0]
+    sx, sy = start
+    for x, y in grid.getAdjacentCoords(sx, sy, includeDiagonals=True):
+      assert grid.getValue(x, y) == '.', 'wrong grid pattern'
+      if sx - x == 0 or sy - y == 0:
+        grid.setValue(x, y, '#')
+      else:
+        grid.setValue(x, y, '@')
+        starts.append((x, y))
+    grid.setValue(sx, sy, '#')
+    starts.pop(0)
+    grid.print2D()
+
+  print('starts:', starts)
+  assert len(starts) == 4, 'bad number of starts'
+  adjacencies = {}
+  startPositions = []
+  for i, start in enumerate(starts):
+    adj = generateAdjacencies(grid, start)
+    adjacencies[str(i)] = adj
+    keys = []
+    for key in adj:
+      adjacencies[key] = generateAdjacencies(grid, keyLocations[key])
+      keys.append(key)
+    startPositions.append(str(i))
+
+  print('adjacencies:',len(adjacencies))
+  print('start positions:', startPositions)
+  print()
+
+  assert len(startPositions) == 4, 'bad number of states'
+  print(explore2(adjacencies, startPositions, list(keyLocations.keys())))
+
+part2()
