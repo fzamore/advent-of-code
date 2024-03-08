@@ -7,56 +7,48 @@ input = open('day18.txt').read().splitlines()
 Coords = tuple[int, int]
 
 # Our state consists of a list of keys remaining (not picked up), and our
-# current position.
+# current position (represented by string value - either "@" or a key).
 State = namedtuple('State', ['keys', 'pos'])
 
 def getAdjacentStates(
-  adjacencies: dict[Coords, dict[Coords, tuple[int, list[Coords]]]],
+  adjacencies: dict[str, dict[str, tuple[int, list[str]]]],
   state: State,
-  keys: dict[Coords, str],
-  doors: dict[Coords, str],
 ):
   results = []
-  for keypos in adjacencies[state.pos]:
-    dist, doorsInPath = adjacencies[state.pos][keypos]
-    if keypos not in state.keys:
+  keySet = set(state.keys)
+  # Loop through all adjacencies from our current position.
+  for key in adjacencies[state.pos]:
+    dist, doorsInPath = adjacencies[state.pos][key]
+    if key not in keySet:
       # We've already picked up this key. Skip it.
       continue
 
-    remainingKeyvals = set(
-      [keys[k] for k in state.keys]
-    )
-    lockedDoor = False
-    for doorpos in doorsInPath:
-      doorval = doors[doorpos]
-      if doorval in remainingKeyvals:
-        lockedDoor = True
-        break
-    if lockedDoor:
-      # We've encountered a locked door.
+    if any([(door in keySet) for door in doorsInPath]):
+      # If any of the doors in this path are still in our remaining keys
+      # (i.e., we haven't yet picked up the key), we cannot move past this
+      # door.
       continue
 
     # We've found a valid key to pick up. Remove it from our keys
     # remaining, and add the new state to our results list.
     nkeys = list(state.keys)
-    nkeys.remove(keypos)
-    results.append((State(tuple(nkeys), keypos), dist))
+    nkeys.remove(key)
+    results.append((State(tuple(nkeys), key), dist))
 
   return results
 
 def explore(
-  adjacencies: dict[Coords, dict[Coords, tuple[int, list[Coords]]]],
-  start: Coords,
-  keys: dict[Coords, str],
-  doors: dict[Coords, str],
+  adjacencies: dict[str, dict[str, tuple[int, list[str]]]],
+  start: str,
+  keys: list[str],
 ) -> int:
   def getAdj(state: State) -> list[tuple[State, int]]:
-    return getAdjacentStates(adjacencies, state, keys, doors)
+    return getAdjacentStates(adjacencies, state)
 
   def isDone(state: State) -> bool:
     return len(state.keys) == 0
 
-  _, steps = dijkstra(State(tuple(keys.keys()), start), getAdj, isDone)
+  _, steps = dijkstra(State(tuple(keys), start), getAdj, isDone)
 
   assert isinstance(steps, int) or steps.is_integer(), \
     'non-int returned from dijkstra: %s' % str(steps)
@@ -67,10 +59,10 @@ def explore(
 # an entry including thedistance from start to that key, and all doors
 # along the path to that key.
 def generateAdjacencies(grid: ArrayGrid, start: Coords) \
-  -> dict[Coords, tuple[int, list[Coords]]]:
+  -> dict[str, tuple[int, list[str]]]:
   results = {}
   seen = {start}
-  q: deque[tuple[Coords, list[Coords], int]] = deque([(start, [], 0)])
+  q: deque[tuple[Coords, list[str], int]] = deque([(start, [], 0)])
   while len(q):
     (x, y), doors, depth = q.popleft()
     for nx, ny in grid.getAdjacentCoords(x, y, includeDiagonals=False):
@@ -79,16 +71,20 @@ def generateAdjacencies(grid: ArrayGrid, start: Coords) \
       seen.add((nx, ny))
       v = grid.getValue(nx, ny)
       if v == '#':
+        # We've hit a wall. Stop.
         continue
+
       # Make a copy of the doors list for this path.
       ndoors = doors.copy()
       if v.islower():
         # We encountered a key. Add the distance from the start to our
         # adjacencies list.
-        results[(nx, ny)] = (depth + 1, doors)
+        results[v] = (depth + 1, doors)
       elif v.isupper():
-        # We found a door. Add it to our list of doors for this path.
-        ndoors.append((nx, ny))
+        # We found a door. Add it to our list of doors for this path (and
+        # make it lowercase to make checking easier in the future).
+        ndoors.append(v.lower())
+
       # Keep moving through the grid.
       q.append(((nx, ny), ndoors, depth + 1))
   return results
@@ -100,45 +96,42 @@ def part1() -> None:
   grid.print2D()
 
   start = None
-  keys: dict[Coords, str] = {}
-  doors: dict[Coords, str] = {}
+  keys: list[tuple[Coords, str]] = []
   for x in range(w):
     for y in range(h):
       v = str(grid.getValue(x, y))
       match v:
         case '@':
-          start = x, y
+          start = (x, y), v
         case _ if v.islower():
-          keys[(x,y)] = v
-        case _ if v.isupper():
-          # Make the doors lowercase to make checking easier in the future.
-          doors[(x,y)] = v.lower()
+          keys.append(((x, y), v))
+        case _ if v.isupper(): pass
         case '.' | '#': pass
         case _: assert False, 'bad value in grid'
 
   assert start is not None, 'did not find start'
   assert len(keys) > 0, 'did not find keys'
-  assert len(doors) > 0, 'did not find doors'
 
   print('start:', start)
   print('keys:', len(keys), keys)
-  print('doors:', len(doors), doors)
   print()
 
-  toGenerate = [start] + list(keys.keys())
+  toGenerate = [start] + keys
   print('generating adjacencies:', len(toGenerate))
 
   adjacencies = {}
-  for pos in toGenerate:
+  for pos, v in toGenerate:
     x, y = pos
     adj = generateAdjacencies(grid, pos)
-    adjacencies[pos] = adj
-    if pos == start:
+    if v == '@':
       assert len(adj) == len(keys), 'not enough adjacencies generated'
     else:
       assert len(adj) == len(keys) - 1, 'not enough adjacencies generated'
 
+    adjacencies[v] = adj
+
   print('exploring...')
-  print(explore(adjacencies, start, keys, doors))
+  keyStrs = [k[1] for k in keys]
+  print(explore(adjacencies, '@', keyStrs))
 
 part1()
