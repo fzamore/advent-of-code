@@ -102,11 +102,12 @@ def runMachine(memory: dict[int, int], inputs: list[int]) -> list[int]:
 
 def part1() -> None:
   memory = dict(zip(range(len(input)), list(map(int, input))))
-  outputs = []
+  result = 0
   for x in range(50):
     for y in range(50):
-      outputs.extend(runMachine(memory.copy(), [x, y]))
-  print('outputs:', len(outputs))
-  print(sum(outputs))
+      outputs = runMachine(memory.copy(), [x, y])
+      assert len(outputs) == 1, 'bad output'
+      result += outputs[0]
+  print(result)
 
 part1()
