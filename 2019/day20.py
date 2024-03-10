@@ -26,34 +26,13 @@ def getPortal(grid: ArrayGrid, x: int, y: int) -> Optional[tuple[str, Coords]]:
           return (v + vd, (nx, ny))
   return None
 
-def getAdjacentNodes(
-  grid: ArrayGrid,
-  portals: dict[Coords, Coords],
-  pos: Coords,
-) -> list[tuple[Coords, Any]]:
-  x, y = pos
-  results = []
-  for nx, ny in grid.getAdjacentCoords(x, y):
-    v = grid.getValue(nx, ny)
-    if v == '.':
-      # Regular traversal.
-      results.append(((nx, ny), None))
-    elif v.isupper() and pos in portals:
-      # Portal.
-      results.append((portals[pos], None))
-  return results
-
-def part1() -> None:
-  w = len(input[2]) + 2
-  h = len(input)
-  print('size: %d x %d' % (w, h))
-
+def processInput(w: int, h: int) \
+  -> tuple[ArrayGrid, dict[Coords, Coords], Coords, Coords]:
   grid = ArrayGrid(w, h)
   for y in range(h):
     for x in range(w):
       v = input[y][x] if x < len(input[y]) else ' '
       grid.setValue(x, y, v)
-  grid.print2D()
 
   start, end = None, None
   portalCoords = defaultdict(list)
@@ -72,24 +51,112 @@ def part1() -> None:
         assert end is None, 'already found end'
         end = pos
       else:
+        print('portal', label, pos)
         portalCoords[label].append(pos)
 
   assert start is not None, 'did not find start'
   assert end is not None, 'did not find end'
-  print('start / end:', start, end)
-  print('portals:', portalCoords)
 
   portals = {}
   for v1, v2 in portalCoords.values():
     portals[v1] = v2
     portals[v2] = v1
-  print('links:', portals)
+
+  return grid, portals, start, end
+
+def getAdjacentNodes(
+  grid: ArrayGrid,
+  portals: dict[Coords, Coords],
+  pos: Coords,
+) -> list[tuple[Coords, Any]]:
+  x, y = pos
+  results = []
+  for nx, ny in grid.getAdjacentCoords(x, y):
+    v = grid.getValue(nx, ny)
+    if v == '.':
+      # Regular traversal.
+      results.append(((nx, ny), None))
+    elif v.isupper() and pos in portals:
+      # Portal.
+      results.append((portals[pos], None))
+  return results
+
+def isOuterPortal(grid: ArrayGrid, pos: Coords) -> bool:
+  w, h = grid.getWidth(), grid.getHeight()
+  x, y = pos
+  # Crude method to determine whether the given position is within N
+  # points of the border, and if so, it's an outer portal.
+  return any([v <= 5 for v in [x, abs(x - w), y, abs(y - h)]])
+
+def getAdjacentNodes2(
+  grid: ArrayGrid,
+  portals: dict[Coords, Coords],
+  node: tuple[Coords, int],
+) -> list[tuple[tuple[Coords, int], Any]]:
+  pos, level = node
+  x, y = pos
+  results = []
+  for nx, ny in grid.getAdjacentCoords(x, y):
+    v = grid.getValue(nx, ny)
+    if v == '.':
+      # Regular traversal.
+      results.append((((nx, ny), level), None))
+    elif v.isupper() and pos in portals:
+      # An uppercase letter is adjacent to (x, y), so (x, y) must be a portal.
+      other = portals[pos]
+      if isOuterPortal(grid, pos):
+        assert not isOuterPortal(grid, other), 'other end should not also be outer'
+        if level == 1:
+          # We can't pass through an outer portal if we're at the top level.
+          continue
+        # Move outward.
+        nlevel = level - 1
+      else:
+        assert isOuterPortal(grid, other), 'other end should be outer'
+        # Move inward.
+        nlevel = level + 1
+      results.append(((other, nlevel), None))
+  return results
+
+def part1() -> None:
+  w = len(input[2]) + 2
+  h = len(input)
+  print('size: %d x %d' % (w, h))
+
+  grid, portals, start, end = processInput(w, h)
+
+  grid.print2D()
+  assert start is not None, 'did not find start'
+  assert end is not None, 'did not find end'
+  print('start / end:', start, end)
+  print('portals:', portals)
 
   result = bfs(
     start,
     lambda pos: getAdjacentNodes(grid, portals, pos),
-    lambda x, y: True,
+    lambda *_: True,
   )
   print(result[end])
 
-part1()
+def part2() -> None:
+  w = len(input[2]) + 2
+  h = len(input)
+  print('size: %d x %d' % (w, h))
+
+  grid, portals, start, end = processInput(w, h)
+
+  grid.print2D()
+  assert start is not None, 'did not find start'
+  assert end is not None, 'did not find end'
+  print('start / end:', start, end)
+  print('portals:', portals)
+
+  result = bfs(
+    (start, 1),
+    lambda node: getAdjacentNodes2(grid, portals, node),
+    lambda *_: True,
+    lambda node, _: node[0] == end and node[1] == 1,
+  )
+  print(result[(end, 1)])
+
+part2()
