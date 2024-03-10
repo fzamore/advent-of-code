@@ -1,8 +1,7 @@
 from enum import IntEnum
 from typing import Optional
 from common.sparsegrid import SparseGrid
-from common.bfs import bfs
-from collections import deque
+from common.graphtraversal import bfs
 
 input = open('day15.txt').read().split(',')
 
