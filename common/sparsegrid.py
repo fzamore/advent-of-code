@@ -173,6 +173,8 @@ class SparseGrid:
         charMap: dict[Hashable, Hashable] = {},
     ) -> None:
         assert self._dimension == 2, 'Cannot print2D with dimension: %d' % self._dimension
+        if len(self._map) == 0:
+            return
 
         if not minCoords:
             minCoords = self._minCoords
