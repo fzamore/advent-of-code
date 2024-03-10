@@ -100,6 +100,10 @@ def runMachine(memory: dict[int, int], inputs: list[int]) -> list[int]:
 
   return outputs
 
+def inBeam(x: int, y: int) -> bool:
+  memory = dict(zip(range(len(input)), list(map(int, input))))
+  return runMachine(memory, [x, y])[0] == 1
+
 def part1() -> None:
   memory = dict(zip(range(len(input)), list(map(int, input))))
   result = 0
@@ -110,4 +114,35 @@ def part1() -> None:
       result += outputs[0]
   print(result)
 
-part1()
+def part2() -> None:
+  start = 7, 9 # found by printing out the tractor beam pattern
+  print('start:', start)
+  sx, sy = start
+  rows = {sy: sx}
+  row = sy
+  size = 100
+
+  # For each row, calculate the max column within the beam.
+  while True:
+    mx = rows[row]
+    row += 1
+
+    newMax = mx
+    while inBeam(newMax, row):
+      newMax += 1
+    # We went beyond the beam, so course-correct by 1.
+    newMax -= 1
+
+    rows[row] = newMax
+
+    # Assume this coordinate is the top right of the square. If the bottom
+    # left of the correctly-sized square is also in the beam, then we have
+    # our answer.
+    newRow = row + size - 1
+    newCol = newMax - size + 1
+    if inBeam(newCol, newRow):
+      print('done:', newCol, row)
+      print(10000 * newCol + row)
+      break
+
+part2()
