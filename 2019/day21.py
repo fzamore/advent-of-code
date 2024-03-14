@@ -114,6 +114,7 @@ def runAsciiProgram(program: list[str]) -> None:
 
 def part1() -> None:
   # Jump if (1, 2, or 3 spaces ahead is a hole) AND (4 spaces ahead is ground).
+  #  (~A v ~B v ~C) ^ D
   program = [
     'NOT A J',
     'NOT B T',
@@ -142,26 +143,25 @@ def part2() -> None:
   # This results in the following boolean expression:
   #   (D ^ (~A v ~B v ~C)) ^ (E v (H ^ (~E v ~F v ~G)))
   #
-  # This is equivalent to:
-  #   (D ^ ~(A ^ B ^ C)) ^ (E v (H ^ ~(E ^ F ^ G)))
-  # (fewer NOT operations)
+  # To simplify the second half: (E v (H ^ (~E v ~F v ~G))), consider two
+  # cases: E is true or E is false. If E is true, then the entire
+  # expression is trivially true. If E is false, then (~E v ~F v ~G) is
+  # true, so we can remove it from the expression, leaving:
+  #   (D ^ (~A v ~B v ~C)) ^ (E v H)
+  #
+  # This is equivalent to: (D ^ ~(A ^ B ^ C)) ^ (E v H)
+  #   (fewer NOT operations)
   program = [
     # (D ^ ~(A ^ B ^ C))
-    'NOT C T',
-    'NOT T T',
+    'OR C T',
     'AND B T',
     'AND A T',
     'NOT T T',
     'AND D T',
 
-    # (E v (H ^ ~(E ^ F ^ G)))
-    'NOT G J',
-    'NOT J J',
-    'AND F J',
-    'AND E J',
-    'NOT J J',
-    'AND H J',
+    # (E v H)
     'OR E J',
+    'OR H J',
 
     # Combining the two above expressions.
     'AND T J',
