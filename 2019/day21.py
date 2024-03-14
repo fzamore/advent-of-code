@@ -125,4 +125,49 @@ def part1() -> None:
   ]
   runAsciiProgram(program)
 
-part1()
+def part2() -> None:
+  # Break the program into the next two jumps, and jump if both jumps are
+  # possible.
+  #
+  # The condition for the first jump is the same as part 1: whether there
+  # is a hole in the next three spaces and four spaces ahead is a hole.
+  #
+  # The condition for the second jump is whether the fifth space ahead is
+  # ground (i.e., we don't need to jump right away and can walk at least
+  # one step forward) OR the condition for the first jump translated four
+  # steps forward (i.e., if any of the 5, 6, 7 spaces is a hole AND the 8
+  # space is ground). Note that we don't use the 9-space (register I) at
+  # all.
+  #
+  # This results in the following boolean expression:
+  #   (D ^ (~A v ~B v ~C)) ^ (E v (H ^ (~E v ~F v ~G)))
+  #
+  # This is equivalent to:
+  #   (D ^ ~(A ^ B ^ C)) ^ (E v (H ^ ~(E ^ F ^ G)))
+  # (fewer NOT operations)
+  program = [
+    # (D ^ ~(A ^ B ^ C))
+    'NOT C T',
+    'NOT T T',
+    'AND B T',
+    'AND A T',
+    'NOT T T',
+    'AND D T',
+
+    # (E v (H ^ ~(E ^ F ^ G)))
+    'NOT G J',
+    'NOT J J',
+    'AND F J',
+    'AND E J',
+    'NOT J J',
+    'AND H J',
+    'OR E J',
+
+    # Combining the two above expressions.
+    'AND T J',
+
+    'RUN',
+  ]
+  runAsciiProgram(program)
+
+part2()
