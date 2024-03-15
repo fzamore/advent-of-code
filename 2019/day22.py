@@ -30,8 +30,8 @@ def parseInput() -> list[Instr]:
 # initial card (i.e., index), and the result of the function is the
 # position of card x after all instructions are processed.
 #
-# Each instruction (stack, cut, or incr) modifies the index by a simple
-# mathematical expression, modulo n. We track a and b such that (ax + b)
+# Each instruction (stack, cut, or incr) modifies the index by a linear
+# mathematical transformation, modulo n. We track a and b such that (ax + b)
 # is the desired expression.
 def findCoefficients(instrs: list[Instr], n: int) -> tuple[int, int]:
   # Initially, we want (ax + b) to equal x, so we initialize a to 1 and b to 0.
