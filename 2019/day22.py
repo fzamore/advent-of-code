@@ -10,28 +10,7 @@ class Op(Enum):
 
 Instr = namedtuple('Instr', ['op', 'value'])
 
-def stack(cards: list[int]) -> list[int]:
-  return cards[::-1]
-
-def cut(cards: list[int], val: int) -> list[int]:
-  assert val != 0, 'cannot cut by 0'
-  # Python does the right thing with negatives.
-  return cards[val:] + cards[:val]
-
-def incr(cards: list[int], val: int) -> list[int]:
-  n = len(cards)
-  result = [9999999] * n
-  ri = 0
-  for i in range(n):
-    result[ri] = cards[i]
-    ri = (ri + val) % n
-  assert cards[0] == result[0], 'first card of incr should not change'
-  return result
-
-def part1() -> None:
-  n = 10007
-  print('n:', n)
-
+def parseInput() -> list[Instr]:
   instrs: list[Instr] = []
   for line in input:
     if line.startswith('deal into new stack'):
@@ -43,27 +22,30 @@ def part1() -> None:
       assert val > 0, 'incr value should be positive'
     else:
       assert False, 'bad input line: %s' % line
-    assert abs(val) < n, 'bad value param: %d' % val
 
     instrs.append(Instr(op, val))
+  return instrs
 
+def part1() -> None:
+  n = 10007
+  print('n:', n)
+
+  instrs = parseInput()
   print('instrs:', len(instrs))
 
-  cards = list(range(n))
-
+  cardI = 2019
   for instr in instrs:
     match instr.op:
       case Op.STACK:
-        cards = stack(cards)
+        cardI = n - 1 - cardI
       case Op.CUT:
-        cards = cut(cards, instr.value)
+        cardI = cardI - instr.value
       case Op.INCR:
-        cards = incr(cards, instr.value)
+        cardI = cardI * instr.value
       case _:
-        assert False, 'bad instr'
+        assert False, 'bad instruction'
+    cardI = cardI % n
 
-    assert set(cards) == set(range(n)), 'card values are not correct'
-
-  print(cards.index(2019))
+  print(cardI)
 
 part1()
