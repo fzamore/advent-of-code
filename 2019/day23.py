@@ -119,13 +119,16 @@ def runMachine(memory: dict[int, int], inputs: list[int], pc: int) \
 
   return pc, None
 
-def part1() -> None:
+def initMachines(n: int) -> dict[int, Machine]:
   memory = dict(zip(range(len(input)), list(map(int, input))))
-  n = 50
   machines: dict[int, Machine] = {}
   for i in range(n):
     machines[i] = Machine(memory.copy(), [i], 0)
+  return machines
 
+def part1() -> None:
+  n = 50
+  machines = initMachines(n)
   for i in cycle(range(n)):
     machine = machines[i]
     print('running machine:', i)
@@ -146,4 +149,51 @@ def part1() -> None:
     machines[paddress].queue.append(x)
     machines[paddress].queue.append(y)
 
-part1()
+def part2() -> None:
+  n = 50
+  machines = initMachines(n)
+
+  natX, natY, lastZeroY = None, None, None
+  idleSet: set[int] = set()
+  for i in cycle(range(n)):
+    # We need to complete two empty revolutions per machine to conclude
+    # that we're idle.
+    isIdle = all([len(machines[m].queue) == 0 for m in range(n)]) \
+      and len(idleSet) == 2 * n
+    if isIdle:
+      print('idle:', lastZeroY)
+      if natY == lastZeroY:
+        print('done')
+        print(lastZeroY)
+        return
+
+      assert natX is not None and natY is not None, 'missing nat packet when idle'
+      # Reset the zero queue to only the most recent nat packet.
+      machines[0].queue = [natX, natY]
+      lastZeroY = natY
+
+      # Reset the nat packet and idle set.
+      natX, natY = None, None
+      idleSet = set()
+      continue
+
+    machine = machines[i]
+    pc, result = runMachine(machine.memory, machine.queue, machine.pc)
+    machine.pc = pc
+
+    if result is None:
+      # Add at most two entries for each machine into the idle set.
+      idleSet.add(i if i not in idleSet else i + n)
+      continue
+
+    paddress, x, y = result
+    if paddress == 255:
+      print('nat packet:', result)
+      natX, natY = x, y
+      continue
+
+    assert paddress < n, 'bad packet address'
+    machines[paddress].queue.append(x)
+    machines[paddress].queue.append(y)
+
+part2()
