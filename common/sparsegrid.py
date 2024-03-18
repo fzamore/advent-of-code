@@ -199,6 +199,7 @@ class SparseGrid:
         maxCoords: Optional[list[Coord]] = None,
         sep: str = '',
         default: Any = None,
+        charMap: dict[Hashable, Hashable] = {},
     ) -> None:
         assert self._dimension == 3, 'Cannot print2DSlices with dimension: %d' % self._dimension
 
@@ -214,7 +215,10 @@ class SparseGrid:
             print('z = %d' % k)
             for j in range(minCoords[1], maxCoords[1] + 1):
                 for i in range(minCoords[0], maxCoords[0] + 1):
-                    print('%s%s' % (self.getValue((i, j, k), default), sep), end='')
+                    v = self.getValue((i, j, k), default)
+                    if v in charMap:
+                        v = charMap[v]
+                    print('%s%s' % (v, sep), end='')
                 print()
             print()
         print()
