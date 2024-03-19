@@ -5,10 +5,9 @@ from intcode import IntcodeVM
 input = open('day23.txt').read().split(',')
 
 def initMachines(n: int) -> dict[int, IntcodeVM]:
-  memory = dict(zip(range(len(input)), list(map(int, input))))
   machines: dict[int, IntcodeVM] = {}
   for i in range(n):
-    machines[i] = IntcodeVM(memory)
+    machines[i] = IntcodeVM.initFromInput(input)
     machines[i].addInput(i)
     machines[i].setDefaultInputValue(-1)
   return machines
