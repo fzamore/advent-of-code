@@ -67,8 +67,9 @@ class IntcodeVM:
   def inputQueueSize(self) -> int:
     return len(self._inputQueue)
 
-  # Runs the VM and returns a list of outputs. A "None" value within the
-  # result means the machine is waiting for input.
+  # Runs the VM and returns a list of outputs. Each individual output is
+  # yielded, to allow callers to process outputs individually. A "None"
+  # value within the result means the machine is waiting for input.
   def run(self) -> Iterator[Optional[int]]:
     memory = self._memory
 
