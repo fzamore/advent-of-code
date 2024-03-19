@@ -9,7 +9,6 @@ def initMachines(n: int) -> dict[int, IntcodeVM]:
   for i in range(n):
     machines[i] = IntcodeVM.initFromInput(input)
     machines[i].addInput(i)
-    machines[i].setDefaultInputValue(-1)
   return machines
 
 def part1() -> None:
@@ -17,6 +16,10 @@ def part1() -> None:
   machines = initMachines(n)
   for i in cycle(range(n)):
     packet = []
+
+    if machines[i].inputQueueSize() == 0:
+      machines[i].addInput(-1)
+
     for output in machines[i].run():
       if output is None:
         # Skip input instructions.
@@ -67,6 +70,10 @@ def part2() -> None:
       continue
 
     packet = []
+
+    if machines[i].inputQueueSize() == 0:
+      machines[i].addInput(-1)
+
     for output in machines[i].run():
       if output is None:
         # We're waiting for input. Add at most two entries for each machine

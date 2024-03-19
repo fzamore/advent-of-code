@@ -40,15 +40,11 @@ class IntcodeVM:
   # Input queue
   _inputQueue: deque[int]
 
-  # Default value if input queue is empty
-  _defaultInputValue: Optional[int]
-
   def __init__(self, memory: dict[int, int]) -> None:
     self._pc = 0
     self._relativeBase = 0
     self._memory = memory.copy()
     self._inputQueue = deque()
-    self._defaultInputValue = None
 
   @staticmethod
   def initFromInput(input: list[str]) -> 'IntcodeVM':
@@ -70,9 +66,6 @@ class IntcodeVM:
 
   def inputQueueSize(self) -> int:
     return len(self._inputQueue)
-
-  def setDefaultInputValue(self, value: int) -> None:
-    self._defaultInputValue = value
 
   # Runs the VM and returns a list of outputs. A "None" value within the
   # result means the machine is waiting for input.
@@ -99,23 +92,11 @@ class IntcodeVM:
           self._pc += Op.getParamCount(opcode) + 1
         case Op.INPUT:
           assert dst >= 0, 'dst cannot be negative'
-          if len(self._inputQueue) == 0 and self._defaultInputValue is None:
-            # Waiting for input and no default value set.
-            yield None
-
           if len(self._inputQueue) == 0:
-            assert self._defaultInputValue is not None, \
-              'input queue is empty and no default value set'
-            memory[dst] = self._defaultInputValue
-            shouldYield = True
-          else:
-            memory[dst] = self._inputQueue.popleft()
-            shouldYield = False
-
-          self._pc += Op.getParamCount(opcode) + 1
-          if shouldYield:
-            # None means the machine is waiting for input.
+            # Waiting for input.
             yield None
+          memory[dst] = self._inputQueue.popleft()
+          self._pc += Op.getParamCount(opcode) + 1
         case Op.OUTPUT:
           self._pc += Op.getParamCount(opcode) + 1
           yield paramValues[0]
