@@ -1,6 +1,6 @@
 from collections import deque
 from enum import IntEnum
-from typing import Iterator, Optional
+from typing import Iterable, Iterator, Optional
 
 class Op(IntEnum):
   ADD: int = 1
@@ -51,18 +51,25 @@ class IntcodeVM:
     memory = dict(zip(range(len(input)), list(map(int, input))))
     return IntcodeVM(memory)
 
-  def addInput(self, value: int) -> None:
+  def addInput(self, value: int) -> 'IntcodeVM':
     self._inputQueue.append(value)
+    return self
 
-  def addAsciiInput(self, ascii: str) -> None:
+  def addInputs(self, values: Iterable[int]) -> 'IntcodeVM':
+    self._inputQueue.extend(values)
+    return self
+
+  def addAsciiInput(self, ascii: str) -> 'IntcodeVM':
     if ascii == '':
-      return
+      return self
     for c in ascii:
       self.addInput(ord(c))
     self.addInput(ord('\n'))
+    return self
 
-  def clearInputQueue(self) -> None:
+  def clearInputQueue(self) -> 'IntcodeVM':
     self._inputQueue = deque()
+    return self
 
   def inputQueueSize(self) -> int:
     return len(self._inputQueue)
@@ -122,6 +129,15 @@ class IntcodeVM:
           self._pc += Op.getParamCount(opcode) + 1
         case _:
           assert False, 'bad opcode: %s' % opcode
+
+  # Runs the machine and returns all outputs. This method will fail if
+  # there are any input instructions.
+  def runAll(self) -> list[int]:
+    outputs = []
+    for output in self.run():
+      assert output is not None, 'runAll() cannot have input instructions'
+      outputs.append(output)
+    return outputs
 
   def _getParameterAddresses(self) -> list[int]:
     memory, pc = self._memory, self._pc

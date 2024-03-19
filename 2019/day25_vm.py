@@ -37,7 +37,7 @@ def part1() -> None:
     'north',
   ]
   # Uncomment to play the game interactively.
-  # commands = []
+  commands = []
 
   machine = IntcodeVM.initFromInput(inp)
   for output in machine.run():

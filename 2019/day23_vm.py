@@ -8,8 +8,7 @@ input = open('day23.txt').read().split(',')
 def initMachines(n: int) -> dict[int, IntcodeVM]:
   machines: dict[int, IntcodeVM] = {}
   for i in range(n):
-    machines[i] = IntcodeVM.initFromInput(input)
-    machines[i].addInput(i)
+    machines[i] = IntcodeVM.initFromInput(input).addInput(i)
   return machines
 
 def runMachine(machine: IntcodeVM) -> Optional[tuple[int, int, int]]:
@@ -45,8 +44,7 @@ def part1() -> None:
       return
 
     assert paddress < n, 'bad packet address'
-    machines[paddress].addInput(x)
-    machines[paddress].addInput(y)
+    machines[paddress].addInputs([x, y])
 
 def part2() -> None:
   n = 50
@@ -68,9 +66,7 @@ def part2() -> None:
 
       assert natX is not None and natY is not None, 'missing nat packet when idle'
       # Reset the zero queue to only the most recent nat packet.
-      machines[0].clearInputQueue()
-      machines[0].addInput(natX)
-      machines[0].addInput(natY)
+      machines[0].clearInputQueue().addInputs([natX, natY])
       lastZeroY = natY
 
       # Reset the nat packet and idle set.
@@ -92,7 +88,6 @@ def part2() -> None:
       continue
 
     assert paddress < n, 'bad packet address'
-    machines[paddress].addInput(x)
-    machines[paddress].addInput(y)
+    machines[paddress].addInputs([x, y])
 
 part2()
