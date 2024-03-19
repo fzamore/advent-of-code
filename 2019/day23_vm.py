@@ -1,4 +1,5 @@
 from itertools import cycle
+from typing import Optional
 
 from intcode import IntcodeVM
 
@@ -11,33 +12,41 @@ def initMachines(n: int) -> dict[int, IntcodeVM]:
     machines[i].addInput(i)
   return machines
 
+def runMachine(machine: IntcodeVM) -> Optional[tuple[int, int, int]]:
+  packet = []
+  if machine.inputQueueSize() == 0:
+    # Use -1 if the queue is empty.
+    machine.addInput(-1)
+
+  for output in machine.run():
+    if output is None:
+      # Do not synthesize a packet if we're waiting for input.
+      return None
+
+    packet.append(output)
+    if len(packet) == 3:
+      return (packet[0], packet[1], packet[2])
+
+  assert False, 'machine did not run cleanly'
+
 def part1() -> None:
   n = 50
   machines = initMachines(n)
   for i in cycle(range(n)):
-    packet = []
+    packet = runMachine(machines[i])
+    if packet is None:
+      continue
 
-    if machines[i].inputQueueSize() == 0:
-      machines[i].addInput(-1)
+    print('received packet from i:', i, packet)
+    paddress, x, y = packet
+    if paddress == 255:
+      print('done:', packet)
+      print(y)
+      return
 
-    for output in machines[i].run():
-      if output is None:
-        # Skip input instructions.
-        break
-
-      packet.append(output)
-      if len(packet) == 3:
-        print('received packet from i:', i, packet)
-        paddress, x, y = packet
-        if paddress == 255:
-          print('done:', packet)
-          print(y)
-          return
-
-        assert paddress < n, 'bad packet address'
-        machines[paddress].addInput(x)
-        machines[paddress].addInput(y)
-        break
+    assert paddress < n, 'bad packet address'
+    machines[paddress].addInput(x)
+    machines[paddress].addInput(y)
 
 def part2() -> None:
   n = 50
@@ -69,29 +78,21 @@ def part2() -> None:
       idleSet = set()
       continue
 
-    packet = []
+    packet = runMachine(machines[i])
+    if packet is None:
+      # We're waiting for input. Add at most two entries for each machine
+      # into the idle set.
+      idleSet.add(i if i not in idleSet else i + n)
+      continue
 
-    if machines[i].inputQueueSize() == 0:
-      machines[i].addInput(-1)
+    paddress, x, y = packet
+    if paddress == 255:
+      print('nat packet:', packet)
+      natX, natY = x, y
+      continue
 
-    for output in machines[i].run():
-      if output is None:
-        # We're waiting for input. Add at most two entries for each machine
-        # into the idle set.
-        idleSet.add(i if i not in idleSet else i + n)
-        break
-
-      packet.append(output)
-      if len(packet) == 3:
-        paddress, x, y = packet
-        if paddress == 255:
-          print('nat packet:', packet)
-          natX, natY = x, y
-          break
-
-        assert paddress < n, 'bad packet address'
-        machines[paddress].addInput(x)
-        machines[paddress].addInput(y)
-        break
+    assert paddress < n, 'bad packet address'
+    machines[paddress].addInput(x)
+    machines[paddress].addInput(y)
 
 part2()
