@@ -28,16 +28,9 @@ class Op(IntEnum):
    }[Op(op)]
 
 class IntcodeVM:
-  # Program counter
   _pc: int
-
-  # Relative base
   _relativeBase: int
-
-  # Program data
   _memory: dict[int, int]
-
-  # Input queue
   _inputQueue: deque[int]
 
   def __init__(self, memory: dict[int, int]) -> None:
@@ -131,7 +124,7 @@ class IntcodeVM:
           assert False, 'bad opcode: %s' % opcode
 
   # Runs the machine and returns all outputs. This method will fail if
-  # there are any input instructions.
+  # there are any input instructions and the input queue is empty.
   def runAll(self) -> list[int]:
     outputs = []
     for output in self.run():
