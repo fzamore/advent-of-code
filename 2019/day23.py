@@ -131,14 +131,13 @@ def part1() -> None:
   machines = initMachines(n)
   for i in cycle(range(n)):
     machine = machines[i]
-    print('running machine:', i)
     pc, result = runMachine(machine.memory, machine.queue, machine.pc)
     machines[i].pc = pc
 
     if result is None:
       continue
 
-    print('received packet:', result)
+    print('packet from:', i, result)
     paddress, x, y = result
     if paddress == 255:
       print('done:', result)
