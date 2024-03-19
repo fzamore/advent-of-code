@@ -139,8 +139,7 @@ class IntcodeVM:
           address = memory.get(pc + i + 1, 0) + self._relativeBase
         case _:
           assert False, 'bad mode: %s' % mode
-      # print('paramMode', pc, i, mode, address)
       results.append(address)
+
     assert len(results) <= 3, 'bad addresses: %s' % results
-    # print('param', pc, self._relativeBase, value, opcode, paramModes, results)
     return results
