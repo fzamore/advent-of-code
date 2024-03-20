@@ -67,8 +67,15 @@ class IntcodeVM:
   def inputQueueSize(self) -> int:
     return len(self._inputQueue)
 
+  def copy(self) -> 'IntcodeVM':
+    c = IntcodeVM(self._memory)
+    c._pc = self._pc
+    c._relativeBase = self._relativeBase
+    c.addInputs(self._inputQueue)
+    return c
+
   # Runs the VM and returns a list of outputs. Each individual output is
-  # yielded, to allow callers to process outputs individually. A "None"
+  # yielded, to allow callers to process outputs sequentially. A "None"
   # value within the result means the machine is waiting for input.
   def run(self) -> Iterator[Optional[int]]:
     memory = self._memory
@@ -128,9 +135,17 @@ class IntcodeVM:
   def runAll(self) -> list[int]:
     outputs = []
     for output in self.run():
-      assert output is not None, 'runAll() cannot have input instructions'
+      assert output is not None, 'runAll() cannot wait for input'
       outputs.append(output)
     return outputs
+
+  # Runs the machine and halts when it encounters a single output
+  # instruction. Returns the result of that output instruction.
+  def runUntilSingleOutput(self) -> int:
+    for output in self.run():
+      assert output is not None, 'run() asked for input'
+      return output
+    assert False, 'run() did not produce an output'
 
   def _getParameterAddresses(self) -> list[int]:
     memory, pc = self._memory, self._pc
