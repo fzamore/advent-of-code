@@ -91,44 +91,49 @@ class IntcodeVM:
       dst = paramAddresses[-1]
       assert dst >= 0, 'dst cannot be negative'
 
+      # Whether we should advance the program counter.
+      shouldAdvancePC = True
+
       match opcode:
         case Op.ADD:
           memory[dst] = paramValues[0] + paramValues[1]
-          self._pc += Op.getParamCount(opcode) + 1
         case Op.MUL:
           memory[dst] = paramValues[0] * paramValues[1]
-          self._pc += Op.getParamCount(opcode) + 1
         case Op.INPUT:
           assert dst >= 0, 'dst cannot be negative'
           if len(self._inputQueue) == 0:
             # Waiting for input.
             yield None
           memory[dst] = self._inputQueue.popleft()
-          self._pc += Op.getParamCount(opcode) + 1
         case Op.OUTPUT:
+          # We advance the program counter before yielding back to
+          # callers, to allow them to stop the machine and optionally
+          # resume it later by calling run(). This ensures the program
+          # counter is in the correct (advanced) spot at the beginning of
+          # a subsequent run() call.
           self._pc += Op.getParamCount(opcode) + 1
+          shouldAdvancePC = False
           yield paramValues[0]
         case Op.JUMP_IF_TRUE:
           if paramValues[0] != 0:
             self._pc = paramValues[1]
-          else:
-            self._pc += Op.getParamCount(opcode) + 1
+            shouldAdvancePC = False
         case Op.JUMP_IF_FALSE:
           if paramValues[0] == 0:
             self._pc = paramValues[1]
-          else:
-            self._pc += Op.getParamCount(opcode) + 1
+            shouldAdvancePC = False
         case Op.LESS_THAN:
           memory[dst] = 1 if paramValues[0] < paramValues[1] else 0
-          self._pc += Op.getParamCount(opcode) + 1
         case Op.EQUALS:
           memory[dst] = 1 if paramValues[0] == paramValues[1] else 0
-          self._pc += Op.getParamCount(opcode) + 1
         case Op.RELATIVE_BASE:
           self._relativeBase += paramValues[0]
-          self._pc += Op.getParamCount(opcode) + 1
         case _:
           assert False, 'bad opcode: %s' % opcode
+
+      if shouldAdvancePC:
+        # Advance program counter if necessary.
+        self._pc += Op.getParamCount(opcode) + 1
 
   # Runs the machine and returns all outputs. This method will fail if
   # there are any input instructions and the input queue is empty.

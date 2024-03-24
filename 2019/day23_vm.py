@@ -43,7 +43,7 @@ def part1() -> None:
       print(y)
       return
 
-    assert paddress < n, 'bad packet address'
+    assert paddress < n, 'bad packet address: %d' % paddress
     machines[paddress].addInputs([x, y])
 
 def part2() -> None:
@@ -87,7 +87,7 @@ def part2() -> None:
       natX, natY = x, y
       continue
 
-    assert paddress < n, 'bad packet address'
+    assert paddress < n, 'bad packet address: %d' % paddress
     machines[paddress].addInputs([x, y])
 
 part2()
