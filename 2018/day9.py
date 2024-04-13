@@ -1,39 +1,68 @@
 from collections import defaultdict
+from typing import Optional
 
 input = open('day9.txt').read().split()
 
-def place(placed: list[int], curI: int, marble: int) -> tuple[int, list[int]]:
-  n = len(placed)
-  if curI == n - 1:
-    nCurI = 1
-  else:
-    nCurI = curI + 2
-  return nCurI, placed[:nCurI] + [marble] + placed[nCurI:]
+# Use a linked list.
+class Node:
+  value: int
+  prev: 'Node'
+  next: 'Node'
 
-# This is slow (~15s).
-def part1() -> None:
-  players = int(input[0])
-  lastMarble = int(input[6])
+  def __init__(
+    self,
+    value: int,
+    prev: Optional['Node'] = None,
+    next: Optional['Node'] = None,
+  ):
+    self.value = value
 
-  placed = [0]
-  curI = 0
+    # Default to a self-loop if prev/next aren't specified.
+    self.prev = prev if prev is not None else self
+    self.next = next if next is not None else self
+
+def solve(numPlayers: int, lastMarble: int) -> int:
   player = 0
   scores: dict[int, int] = defaultdict(int)
 
-  print('input:', players, lastMarble)
-  for mi in range(lastMarble):
-    m = mi + 1
+  cur = Node(0)
 
+  for m in range(1, lastMarble + 1):
     if m % 23 == 0:
-      curI = (curI - 7) % len(placed)
-      removed = placed.pop(curI)
-      scores[player] += m + removed
-      assert curI < len(placed), 'bad modular arithmetic'
+      toRemove = cur.prev.prev.prev.prev.prev.prev.prev
+      scores[player] += m + toRemove.value
+
+      toRemove.prev.next = toRemove.next
+      toRemove.next.prev = toRemove.prev
+      cur = toRemove.next
+
     else:
-      curI, placed = place(placed, curI, m)
+      prev = cur.next
+      next = cur.next.next
 
-    player = (player + 1) % players
+      ncur = Node(m, prev, next)
+      prev.next = ncur
+      next.prev = ncur
+      cur = ncur
 
-  print(max(scores.values()))
+    player = (player + 1) % numPlayers
 
-part1()
+  winner = max(scores, key=scores.__getitem__)
+  print('winner (0-indexed):', winner)
+  return scores[winner]
+
+def part1() -> None:
+  numPlayers = int(input[0])
+  lastMarble = int(input[6])
+  print('input:', numPlayers, lastMarble)
+
+  print(solve(numPlayers, lastMarble))
+
+def part2() -> None:
+  numPlayers = int(input[0])
+  lastMarble = int(input[6]) * 100
+  print('input:', numPlayers, lastMarble)
+
+  print(solve(numPlayers, lastMarble))
+
+part2()
