@@ -17,14 +17,17 @@ class ArrayGrid:
         return self.getValue(x, y) is not None
 
     def getValue(self, x: int, y: int, default: Any = None) -> Any:
-        i = self._gridIndex(x, y)
-        if i < 0 or i >= self._gridLen:
-            if default:
+        if not self._areValidCoords(x, y):
+            if default is not None:
                 return default
             assert False, 'Invalid grid coordinates: (%d, %d)' % (x, y)
+
+        i = self._gridIndex(x, y)
+        assert i >= 0 and i < self._gridLen, 'Invalid grid coordinates: (%d, %d)' % (x, y)
         return self._grid[i]
 
     def setValue(self, x: int, y: int, value: Any) -> None:
+        assert self._areValidCoords(x, y), 'Invalid grid coordinates: (%d, %d)' % (x, y)
         i = self._gridIndex(x, y)
         assert i >= 0 and i < self._gridLen, 'Invalid grid coordinates: (%d, %d)' % (x, y)
         self._grid[i] = value
@@ -98,6 +101,9 @@ class ArrayGrid:
                 print(v, end='')
             print()
         print()
+
+    def _areValidCoords(self, x: int, y: int) -> bool:
+        return (0 <= x < self.getWidth()) and (0 <= y < self.getHeight())
 
     def _gridIndex(self, x: int, y: int) -> int:
         return y * self._width + x
