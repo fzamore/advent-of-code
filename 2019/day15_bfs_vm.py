@@ -44,7 +44,11 @@ def explore(grid: SparseGrid, initialMachine: IntcodeVM) -> tuple[Coords, int]:
   def getAdjacentNodes(pos: Coords) -> list[tuple[Coords, tuple[IntcodeVM, Dir]]]:
     return [(getAdjacentPosition(pos, dir), (machines[pos].copy(), dir)) for dir in Dir]
 
-  def visit(pos: Coords, extraData: Optional[tuple[IntcodeVM, Dir]]) -> bool:
+  def visit(
+    pos: Coords,
+    numSteps: int,
+    extraData: Optional[tuple[IntcodeVM, Dir]],
+  ) -> bool:
     assert extraData is not None, 'missing extraData'
     machine, dir = extraData
     output = machine.addInput(dir).runUntilSingleOutput()

@@ -139,7 +139,11 @@ def explore(grid: SparseGrid, initialMemory: dict[int, int]) -> tuple[Coords, in
   def getAdjacentNodes(pos: Coords) -> list[tuple[Coords, tuple[dict[int, int], Dir]]]:
     return [(getAdjacentPosition(pos, dir), (memories[pos].copy(), dir)) for dir in Dir]
 
-  def visit(pos: Coords, extraData: Optional[tuple[dict[int, int], Dir]]) -> bool:
+  def visit(
+    pos: Coords,
+    numSteps: int,
+    extraData: Optional[tuple[dict[int, int], Dir]],
+  ) -> bool:
     assert extraData is not None, 'missing extraData'
     memory, dir = extraData
     output = runMachine(memory, dir)

@@ -9,18 +9,19 @@ T = TypeVar('T', bound=Hashable)
 #  getAdjacentNodes (node => list of (node, extraData) tuples): nodes adjacent
 #       to given node. extraData can be anything, but must be supplied (use None
 #       if not needed).
-#  visitNode ((node, extraData) => bool): visits the given node (along with
-#       optional extraData). Returns true if the algorithm should continue past
+#  visitNode ((node, numSteps, extraData) => bool): visits the given node
+#       and the number of steps it took to get to it (along with optional
+#       extraData). Returns true if the algorithm should continue past
 #       this node, or false if this branch is a dead-end.
-#  isEndNode (optional) ((node, extraData) => bool): returns whether the given node
+# isEndNode (optional) ((node, extraData) => bool): returns whether the given node
 #       (and optional extraData) is an "end node". If this function returns true, the
 #       algorithm will stop and not process any additional nodes.
 # Return value:
-#  dict[node, distance] containing the number of hops to each reachable node
+#   dict[node, distance] containing the number of hops to each reachable node
 def bfs(
   startNode: T,
   getAdjacentNodes: Callable[[T], Iterable[tuple[T, Any]]],
-  visitNode: Callable[[T, Optional[Any]], bool],
+  visitNode: Callable[[T, int, Optional[Any]], bool],
   isEndNode: Optional[Callable[[T, Optional[Any]], bool]] = None,
 ) -> dict[T, int]:
   seen: set[T] = {startNode}
@@ -37,7 +38,7 @@ def bfs(
         continue
       seen.add(adjNode)
 
-      if visitNode(adjNode, extraData):
+      if visitNode(adjNode, numSteps + 1, extraData):
         if isEndNode is not None and isEndNode(adjNode, extraData):
           # We reached an end node. Add an entry to the result and stop.
           result[adjNode] = numSteps + 1
