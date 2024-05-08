@@ -82,7 +82,9 @@ def drip(grid: SparseGrid, start: Coords, yMax: int) -> None:
         if downValue in ['.', '|']:
           # We found a spillover path. Stop traversing horizontally.
           if downValue == '.':
-            # We haven't seen this path before, so add it to the queue.
+            # We haven't seen this path before, so add it to the queue. If
+            # we also add "|" cells to the queue, the algorithm will not
+            # complete in a reasonable amount of time.
             q.append((nx, y + 1))
           # Stop traversing horizontally and mark that we're not in a basin.
           inBasin = False
@@ -97,9 +99,9 @@ def drip(grid: SparseGrid, start: Coords, yMax: int) -> None:
       for hx, hy in horizCells:
         set(hx, hy, '~')
 
-      # Add one cell above to our queue, so we can go back and mark the
-      # corresponding row as at-rest. This can probably be done more
-      # efficiently.
+      # Add one cell above to our queue, so we can backtrack and mark the
+      # corresponding row as at-rest. (This can probably be done more
+      # efficiently.)
       q.append((x, y - 1))
 
 def countCells(grid: SparseGrid, yMin: int, yMax: int, values: list[str]) -> int:
