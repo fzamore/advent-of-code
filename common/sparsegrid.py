@@ -111,10 +111,10 @@ class SparseGrid:
         return list(self._map.keys())
 
     def getMinCoords(self) -> list[Coord]:
-        return self._minCoords
+        return self._minCoords.copy()
 
     def getMaxCoords(self) -> list[Coord]:
-        return self._maxCoords
+        return self._maxCoords.copy()
 
     def addMark(self, coords: Coords, mark: Optional[str] = None) -> None:
         self._validateCoords(coords)
