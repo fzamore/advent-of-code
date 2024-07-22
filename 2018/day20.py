@@ -41,7 +41,7 @@ def getGroupEnd(S: str, i: int) -> int:
   return i
 
 def isChar(c: str) -> bool:
-  return c in ['N', 'E', 'S', 'W']
+  return c in 'NESW'
 
 # Given a starting index (which must be a non-symbol character), return
 # the indicies for the next non-symbol character.
