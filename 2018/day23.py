@@ -61,6 +61,8 @@ def part2() -> None:
 
   # I have no idea why I have to add one here. The original answer was too
   # low, so I tried adding one for kicks, and to my surprise, it worked.
+  # Annoyingly, I don't need to add one to the solution for my sample
+  # input.
   print(c.most_common(1)[0][0] + 1)
 
 part2()
