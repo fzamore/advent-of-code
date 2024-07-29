@@ -101,4 +101,59 @@ def part1() -> None:
   print('after finishing exec:', registers)
   print(registers[0])
 
-part1()
+def part2() -> None:
+  print()
+  ir, instrs = parseInput()
+  print('ir:', ir)
+  print('instrs:', len(instrs))
+  print('starting simulation...')
+
+  # Solving this problem was a very manual process. Eventually, I figured
+  # out that the program first computes a target number, and then stores
+  # in r[0] the sum of all the prime factors of that number.
+
+  r = [1, 0, 0, 0, 0, 0]
+
+  # This is our target number (found by experimentation). It eventually
+  # gets stored in r[2], and r[2] is never changed after that.
+  target = 10551403 # prime factors: 1, 19, 555337, 10551403
+  r[2] = target
+
+  # During the process of finding the target, r0 gets reset to 0.
+  r[0] = 0 # ip 34
+
+  # Below is a simulation of my input, which some critical shortcuts. Only
+  # r0, r3, and r5 will change. r2 is always set to the target. I skip
+  # updating r1, since it's only used to modify the instruction pointer.
+  # The outer loop increments r3 and the inner loop increments r5,
+  # updating r0 if it's ever the case that r3 * r5 == r2.
+
+  # These are the initial values of the registers once the two main loops get going:
+  #   [0, 3, 10551403, 1, 0, 1]
+
+  r[3] = 1 # ip 1
+  # The outer loop, which updates r3.
+  while r[3] <= r[2]: # ip 13
+    r[5] = 1 # ip 2
+
+    # This is a simplication of the commented-out inner loop below. In the
+    # inner loop, r0 is updated if r3 * r5 == r2. This means we are
+    # looking for the value of r5 such that r5 * r3 == r2. Since r2 never
+    # changes, and since r3 doesn't change within each instance of the
+    # inner loop, we can skip the inner loop altogether by checking
+    # whether r3 divides r2, and if so, adding r3 to r0.
+    if r[2] % r[3] == 0:
+      print('updating r0:', r[0], r[3])
+      r[0] += r[3] # ip 7
+
+    # The commented-out inner loop.
+    # while r[5] <= r[2]: # ip 9
+    #   if r[3] * r[5] == r[2]: # ip 3,4
+    #     r[0] += r[3] # ip 7
+    #   r[5] += 1 # ip 8
+
+    r[3] += 1 # ip 12
+
+  print(r[0])
+
+part2()
