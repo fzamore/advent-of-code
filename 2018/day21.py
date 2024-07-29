@@ -70,8 +70,7 @@ def execAll(r: Registers, ir: int, instrs: list[Instr]) -> int:
   while r[ir] >= 0 and r[ir] < len(instrs):
     instr = instrs[r[ir]]
 
-    if i % 100000 == 0:
-      print('exec:', i, r[ir], r)
+    print('exec:', i, r[ir], r)
 
     # This instruction halts the program if r[2] == r[0], so r[2] is what
     # we're looking for.
@@ -101,6 +100,46 @@ def parseInput() -> tuple[int, list[Instr]]:
 
   return ir, instrs
 
+def manualIterate(r: Registers) -> int:
+  seen: set[int] = set()
+  lastChecked = None
+
+  while True: # ip 28 loop
+    r[1] = r[2] | 65536 # ip 6 (2^16 == 1, then 16 0's)
+    r[2] = 1250634 # ip 7
+
+    while True: # ip 13 loop
+      r[2] = 16777215 & (65899 * (16777215 & (r[2] + (r[1] & 255)))) # ip 8, 9, 10, 11, 12
+
+      if 256 > r[1]: # ip 13
+        break
+
+      r[4] = 0 # ip 17
+
+      # while (r[4] + 1) * 256 <= r[1]: # ip 18, 19, 20; loop: [18,19,20,21,22,24,25]
+      #   r[4] += 1 # ip 24
+      # r[1] = r[4] # ip 26
+
+      # The commented-out loop above can be simplified to this.
+      r[1] //= 256
+
+    if r[2] in seen:
+      # We assume that once we've encountered a value we've already seen,
+      # we will see no new values. Thus, the last value we saw before the
+      # duplicate is the value that took the longest to find. Note that we
+      # never read from r[0] when doing manual iteration.
+      print('already seen:', r[2])
+      assert lastChecked is not None, 'should have already checked a value'
+      return lastChecked
+    seen.add(r[2])
+    lastChecked = r[2]
+
+    # This bit halts the program, but we don't actually want the program
+    # to halt (because we want to keep track of every value we ultimately
+    # compare against r0 in this spot).
+    # if r[2] == r[0]: # ip 28
+    #   break
+
 def part1() -> None:
   ir, instrs = parseInput()
   print('ir:', ir)
@@ -109,4 +148,12 @@ def part1() -> None:
   registers = [0, 0, 0, 0, 0, 0]
   print(execAll(registers, ir, instrs))
 
-part1()
+def part2() -> None:
+  ir, instrs = parseInput()
+  print('ir:', ir)
+  print('instrs:', len(instrs))
+
+  registers = [0, 0, 0, 0, 0, 0]
+  print(manualIterate(registers))
+
+part2()
