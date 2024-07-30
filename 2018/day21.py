@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import Optional
 
 input = open('day21.txt').read().splitlines()
 
