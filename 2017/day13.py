@@ -11,38 +11,41 @@ def parseInput() -> list[Layer]:
     result.append(Layer(int(v[0]), int(v[1])))
   return result
 
-def getScannerPos(layer: Layer, time: int) -> int:
+def isCaughtAtTime(layer: Layer, time: int) -> bool:
   # Treat each scanner as a repeating pattern of `m` steps.
   m = 2 * (layer.range - 1)
   assert m % 2 == 0, 'bad math'
+  return time % m == 0
 
-  adjustedTime = time % m
-  if adjustedTime <= m // 2:
-    # Scanner is going out.
-    assert adjustedTime <= layer.range, 'bad range math in outgoing trip'
-    return adjustedTime
-  else:
-    # Scanner is coming back.
-    base = layer.range - 1
-    adjustedTime -= m // 2
-    result = base - adjustedTime
-    assert result <= layer.range, 'bad range math in return trip'
-    return result
+def execute(layers: list[Layer], delay: int = 0) -> list[Layer]:
+  caught = []
+  lastDepth = 0
+  time = delay
+  for layer in layers:
+    time += (layer.depth - lastDepth)
+    lastDepth = layer.depth
+    if isCaughtAtTime(layer, time):
+      caught.append(layer)
+      if delay > 0:
+        # HACK: If we're testing a nonzero delay, we're in Part 2 and thus
+        # we don't care about all layers in which we're caught. We merely
+        # care whether we're caught by *any* layer.
+        return caught
+  return caught
 
 def part1() -> None:
   layers = parseInput()
   print('layers:', len(layers))
+  caught = execute(layers)
+  print(sum([layer.depth * layer.range for layer in caught]))
 
-  severity = 0
-  time = 0
-  for layer in layers:
-    assert time <= layer.depth, 'layers not sorted by depth'
-    time = layer.depth
-    scannerPos = getScannerPos(layer, time)
-    print('scanner pos:', time, scannerPos)
-    if scannerPos == 0:
-      severity += layer.depth * layer.range
+def part2() -> None:
+  layers = parseInput()
+  print('layers:', len(layers))
 
-  print(severity)
+  delay = 1
+  while len(execute(layers, delay)) > 0:
+    delay += 1
+  print(delay)
 
-part1()
+part2()
