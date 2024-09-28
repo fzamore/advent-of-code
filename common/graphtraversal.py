@@ -1,5 +1,5 @@
 from collections import deque
-from typing import Any, Callable,Hashable, Iterable, Optional, TypeVar
+from typing import Any, Callable, Collection, Hashable, Iterable, Optional, TypeVar
 
 T = TypeVar('T', bound=Hashable)
 
@@ -44,5 +44,57 @@ def bfs(
           result[adjNode] = numSteps + 1
           return result
         q.append((numSteps + 1, adjNode))
+
+  return result
+
+# Implementation of a DFS algorithm that visits each node.
+# Params:
+#   startNode (hashable): start node
+#   getAdjacentNodes (node => list of nodes): nodes adjacent
+#       to given node.
+#   seenNode (optional): set of previously-seen nodes
+#   visitNode (optional) ((node) => None): visits the given node
+# Return value:
+#   None
+def dfs(
+  startNode: T,
+  getAdjacentNodes: Callable[[T], Iterable[T]],
+  seenNodes: set[T] = set(),
+  visitNode: Optional[Callable[[T], None]] = None,
+) -> None:
+  if startNode in seenNodes:
+    return
+  seenNodes.add(startNode)
+  if visitNode is not None:
+    visitNode(startNode)
+
+  for adjNode in getAdjacentNodes(startNode):
+    dfs(adjNode, getAdjacentNodes, seenNodes, visitNode)
+
+# Returns a list of all connected components of a given graph.
+# Params:
+#   allNodes: list of nodes in the graph (arbitrarily ordered)
+#   getAdjacentNodes (node => list of nodes): nodes adjacent
+#       to given node.
+# Return value:
+#   list of connected components (each connected component is
+#   itself a list of nodes)
+def getConnectedComponents(
+  allNodes: Iterable[T],
+  getAdjacentNodes: Callable[[T], Iterable[T]],
+) -> Collection[Collection[T]]:
+  result: list[Collection[T]] = []
+  remainingNodes = set(allNodes)
+  while len(remainingNodes) > 0:
+    # Choose an arbitrary start node.
+    for startNode in remainingNodes: break
+
+    # Run a DFS from this node.
+    seenNodes: set[T] = set()
+    dfs(startNode, getAdjacentNodes, seenNodes)
+
+    # Remove all seen nodes from the set of remaining nodes.
+    remainingNodes.difference_update(seenNodes)
+    result.append(list(seenNodes))
 
   return result
