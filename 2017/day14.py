@@ -1,4 +1,5 @@
 from collections import deque
+from typing import Iterator
 from common.arraygrid import ArrayGrid
 from common.graphtraversal import getConnectedComponents
 
@@ -90,7 +91,7 @@ def part2() -> None:
         allNodes.append((col, row))
   print('cells:', len(allNodes))
 
-  def getAdj(pos):
+  def getAdj(pos: tuple[int, int]) -> Iterator[tuple[int, int]]:
     x, y = pos
     for nx, ny in grid.getAdjacentCoords(x, y, includeDiagonals=False):
       if grid.hasValue(nx, ny):
