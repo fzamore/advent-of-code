@@ -2,6 +2,8 @@ from enum import Enum
 from functools import cache
 from math import ceil
 
+from common.ints import ints
+
 input = open('day19.txt').read().splitlines()
 
 class Robot(Enum):
@@ -27,32 +29,16 @@ Blueprint = tuple[Resources, Resources, Resources, Resources]
 def parseInput() -> dict[int, Blueprint]:
   result = {}
   for line in input:
-    id = int(line.split(':')[0].split()[1])
-    values = line.split(':')[1].split('.')
-    robots = {}
-    for v in values:
-      if v == '':
-        continue
-      robot = v.split()[1]
-      costs = {}
-      for s in v.split(' costs ')[1].split(' and '):
-        resource = s.split()[1]
-        cost = int(s.split()[0])
-        costs[resource] = cost
-      # Each robot will cost exactly one or two types of resources.
-      assert len(costs) == 1 or len(costs) == 2
-      robots[robot] = (
-        costs.get('ore', 0),
-        costs.get('clay', 0),
-        costs.get('obsidian', 0),
-      )
+    v = ints(line)
+    assert len(v) == 7, 'bad input line'
+    id = v[0]
     result[id] = (
-      robots['ore'],
-      robots['clay'],
-      robots['obsidian'],
-      robots['geode'],
+      (v[1], 0, 0), # ore
+      (v[2], 0, 0), # clay
+      (v[3], v[4], 0), # obsidian
+      (v[5], 0, v[6]), # geode
     )
-    assert robots['geode'][2] >= 7, 'must require at least 7 obsidian to produce geode'
+    assert v[6] >= 7, 'must require at least 7 obsidian to produce geode'
   return result
 
 def consumeResourcesForNewRobot(

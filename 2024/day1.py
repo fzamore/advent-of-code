@@ -1,11 +1,13 @@
 from collections import Counter
 
+from common.ints import ints
+
 input = open('day1.txt').read().splitlines()
 
 def parseInput() -> tuple[list[int], list[int]]:
   l1, l2 = [], []
   for line in input:
-    n1, n2 = map(int, line.split())
+    n1, n2 = ints(line)
     l1.append(n1)
     l2.append(n2)
   assert len(l1) == len(l2), 'lists are not the same length'
