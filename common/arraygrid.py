@@ -57,6 +57,11 @@ class ArrayGrid:
             if not checkGridBounds or self.areCoordsWithinBounds(nx, ny):
                 yield (nx, ny)
 
+    # Iterates over the entire grid, calling the given function for each cell.
+    def iterate(self, fn: Callable[[int, int, Any], None]) -> None:
+        for y in range(self.getHeight()):
+            for x in range(self.getWidth()):
+                fn(x, y, self.getValue(x, y))
 
     def copy(self) -> 'ArrayGrid':
         grid = ArrayGrid(self._width, self._height)
