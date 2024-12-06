@@ -46,9 +46,13 @@ def iterate(grid: ArrayGrid, start: Coords, dir: Dir) -> set[Coords]:
   totalSeen = set()
   while grid.areCoordsWithinBounds(x, y):
     (x, y), seen = goStraight(grid, (x, y), dir)
-    totalSeen.update(seen)
+    for pos in seen:
+      if (pos, dir) in totalSeen:
+        # Returning an empty set indicates there was a loop.
+        return set()
+      totalSeen.add((pos, dir))
     dir = turnRight(dir)
-  return totalSeen
+  return set([pos for (pos, dir) in totalSeen])
 
 def part1() -> None:
   grid = ArrayGrid.gridFromInput(input)
@@ -59,4 +63,23 @@ def part1() -> None:
   totalSeen = iterate(grid, start, (0, -1))
   print(len(totalSeen))
 
-part1()
+def part2() -> None:
+  grid = ArrayGrid.gridFromInput(input)
+  print('grid:', grid.getWidth(), grid.getHeight())
+  start = findStart(grid)
+  print('start:', start)
+
+  dir = 0, -1
+  totalSeen = iterate(grid, start, dir)
+
+  ans = 0
+  # Try each point in the path (since blockages in other points will have no effect).
+  for x, y in totalSeen:
+    grid.setValue(x, y, '#')
+    if len(iterate(grid, start, dir)) == 0:
+      # We found a loop.
+      ans += 1
+    grid.setValue(x, y, '.')
+  print(ans)
+
+part2()
