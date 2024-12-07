@@ -28,9 +28,6 @@ def parseInput() -> tuple[Graph, list[Update]]:
   print('updates:', len(updates))
   return graph, updates
 
-def isReachable(graph: Graph, v1: int, v2: int) -> bool:
-  return v2 in graph[v1]
-
 def isValidUpdate(graph: Graph, update: Update) -> bool:
   assert len(update) % 2 == 1, 'update length should be odd'
 
