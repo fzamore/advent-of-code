@@ -87,14 +87,17 @@ class SparseGrid:
         self._assertBoundaryCoords()
 
         for adjCoords in self.getAdjacentCoords(coords):
-            notInGrid = False
-            for d in range(self._dimension):
-                if adjCoords[d] < self._minCoords[d] or adjCoords[d] > self._maxCoords[d]:
-                    notInGrid = True
-                    break
-            if notInGrid:
-                continue
-            yield adjCoords
+            if self.areCoordsWithinBounds(adjCoords):
+                yield adjCoords
+
+    def areCoordsWithinBounds(self, coords: Coords) -> bool:
+        assert len(self._map) > 0, 'Cannot check whether coords are in bounds of empty grid'
+        self._assertBoundaryCoords()
+        self._validateCoords(coords)
+        for d in range(self._dimension):
+            if coords[d] < self._minCoords[d] or coords[d] > self._maxCoords[d]:
+                return False
+        return True
 
     def getAllCoordsInOrder(
         self,
@@ -150,7 +153,7 @@ class SparseGrid:
     @staticmethod
     def gridFrom2DInput(
         inputLines: list[str],
-        elementFn: Optional[Callable[[str], Any]] = None,
+        elementFn: Callable[[str], Any] = lambda e: e,
     ) -> 'SparseGrid':
         w, h = len(inputLines[0]), len(inputLines)
         grid = SparseGrid(2)
@@ -158,8 +161,7 @@ class SparseGrid:
             line = inputLines[y]
             assert len(line) == w, 'grid input is not rectangle'
             for x in range(w):
-                v = line[x] if elementFn is None else elementFn(line[x])
-                if v is not None:
+                if (v := elementFn(line[x])) is not None:
                     grid.setValue((x, y), v)
         return grid
 
