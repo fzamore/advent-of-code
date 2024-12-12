@@ -57,6 +57,11 @@ class ArrayGrid:
             if not checkGridBounds or self.areCoordsWithinBounds(nx, ny):
                 yield (nx, ny)
 
+    def getAllCoords(self) -> Iterator[tuple[int, int]]:
+        for y in range(self._height):
+            for x in range(self._width):
+                yield (x, y)
+
     # Returns an (x, y, value) tuple for each item in the grid.
     def getItems(self) -> Iterator[tuple[int, int, Any]]:
         for y in range(self._height):
