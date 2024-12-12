@@ -6,15 +6,10 @@ Coords = tuple[int, int]
 Dir = tuple[int, int]
 
 def findStart(grid: ArrayGrid) -> Coords:
-  start = -1, -1
-  def fn(x: int, y: int, v: str) -> None:
-    nonlocal start
+  for x, y, v in grid.getItems():
     if v == '^':
-      start = x, y
-  grid.iterate(fn)
-
-  assert start != (-1, -1), 'did not find start'
-  return start
+      return (x, y)
+  assert False, 'did not find start'
 
 def turnRight(dir: Dir) -> Dir:
   match dir:

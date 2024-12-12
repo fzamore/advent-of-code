@@ -57,7 +57,12 @@ class ArrayGrid:
             if not checkGridBounds or self.areCoordsWithinBounds(nx, ny):
                 yield (nx, ny)
 
-    # Iterates over the entire grid, calling the given function for each cell.
+    # Returns an (x, y, value) tuple for each item in the grid.
+    def getItems(self) -> Iterator[tuple[int, int, Any]]:
+        for y in range(self._height):
+            for x in range(self._width):
+                yield (x, y, self.getValue(x, y))
+
     def iterate(self, fn: Callable[[int, int, Any], None]) -> None:
         for y in range(self.getHeight()):
             for x in range(self.getWidth()):

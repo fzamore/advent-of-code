@@ -14,12 +14,7 @@ def getAdjacentNodes(grid: ArrayGrid, pos: Coords) -> Iterator[Coords]:
       yield ax, ay
 
 def findTrailheads(grid: ArrayGrid) -> set[Coords]:
-  trailheads = set()
-  def f(x: int, y: int, v: int):
-    if v == 0:
-      trailheads.add((x, y))
-  grid.iterate(f)
-  return trailheads
+  return set([(x, y) for (x, y, v) in grid.getItems() if v == 0])
 
 def getTrailheadScore(grid: ArrayGrid, trailhead: Coords) -> int:
   score = 0
