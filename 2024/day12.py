@@ -53,7 +53,45 @@ def getRegionValue(grid: ArrayGrid, region: Region) -> str:
     return grid.getValue(x, y)
   assert False, 'empty region'
 
+# Returns the number of region corners that this point represents (e.g.,
+# the point within a singular region has four corners, the two points at
+# the end of a linear region each have two corners).
+def countCornersForSinglePoint(grid: ArrayGrid, region: Region, pos: Coords) -> int:
+  assert pos in region, 'pos not in region'
+
+  cornerCount = 0
+  x, y = pos
+  deltas = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+  for i, (dx, dy) in enumerate(deltas):
+    # We compare consecutive adjacent values.
+    ni = (i + 1) % len(deltas)
+    ndx, ndy = deltas[ni]
+
+    apos = x + dx, y + dy
+    napos = x + ndx, y + ndy
+    if apos not in region and napos not in region:
+      # There is a convex corner if two consecutive adjacent values are
+      # not in this region.
+      cornerCount += 1
+
+    if apos in region and napos in region:
+      # Diagonal deltas
+      ddx = 1 if dx == 1 or ndx == 1 else -1
+      ddy = 1 if dy == 1 or ndy == 1 else -1
+      if (x + ddx, y + ddy) not in region:
+        # There is a concave corner if the two consecutive adjacent values
+        # are in the same region and the diagonal value between those two
+        # values is not in this region.
+        cornerCount += 1
+
+  return cornerCount
+
 def getRegionSideCount(grid: ArrayGrid, region: Region) -> int:
+  # The number of sides of a region is equal to the number of corners it
+  # has (this alternative approach was stolen from Reddit; uncomment to
+  # see it in action).
+  # return sum([countCornersForSinglePoint(grid, region, p) for p in region])
+
   # This is kind of a mess. The approach is essentially to create
   # "mini"-sides for each point within the region, and then to "merge"
   # these mini-sides to form complete sides.
