@@ -48,6 +48,7 @@ def getRegionPerimeter(grid: ArrayGrid, region: Region) -> int:
     perim += 4 - adjCount
   return perim
 
+# Useful for debugging.
 def getRegionValue(grid: ArrayGrid, region: Region) -> str:
   for x, y in region:
     return grid.getValue(x, y)
@@ -108,11 +109,10 @@ def getRegionSideCount(grid: ArrayGrid, region: Region) -> int:
   # delta) pair from our candidate set and repeat until we've considered
   # all candidates.
 
-  value = getRegionValue(grid, region)
   candidates = set()
   for x, y in region:
     for ax, ay in grid.getAdjacentCoords(x, y, checkGridBounds=False):
-      if grid.getValue(ax, ay, '.') != value:
+      if (ax, ay) not in region:
         dx, dy = ax - x, ay - y
         assert (dx, dy) in {(1, 0), (0, 1), (-1, 0), (0, -1)}, 'bad delta'
         candidates.add(((x, y), (dx, dy)))
