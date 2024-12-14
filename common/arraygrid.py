@@ -24,7 +24,8 @@ class ArrayGrid:
 
         i = self._gridIndex(x, y)
         assert i >= 0 and i < self._gridLen, 'Invalid grid coordinates: (%d, %d)' % (x, y)
-        return self._grid[i]
+        value = self._grid[i]
+        return value if value is not None else default
 
     def setValue(self, x: int, y: int, value: Any) -> None:
         assert self._areValidCoords(x, y), 'Invalid grid coordinates: (%d, %d)' % (x, y)
