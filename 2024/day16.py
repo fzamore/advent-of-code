@@ -23,6 +23,10 @@ def getAdjacentNodes(grid: ArrayGrid, posdir: PosDir) -> Iterator[tuple[PosDir, 
   (x, y), (dx, dy) = posdir
   for ax, ay in grid.getAdjacentCoords(x, y):
     adx, ady = ax - x, ay - y
+    if adx == -dx and ady == -dy:
+      # No u-turns allowed.
+      continue
+
     av = grid.getValue(ax, ay)
     if av == '#':
       continue
