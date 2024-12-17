@@ -21,6 +21,44 @@ def dijkstra(
     result = _dijkstraInner(startNode, getAdjacentNodes, isDestNode)
     return (result[0], result[1])
 
+# Implementation of Dijkstra's shortest-path algorithm that returns
+# all shortest paths in the graph to a single destination node.
+# Params:
+#  startNode (hashable): start node. distance to this node will always be zero
+#  getAdjacentNodes (node => list of (node, distance) tuples): nodes adjacent
+#       to given node. distances cannot be negative
+#  isDestNode (node => bool): whether this node is a destination, and the
+#       algorithm can terminate
+# Return value:
+#  (node, distance, paths) tuple for destination node, distance to that node,
+#       and all shortest paths from start to finish
+def dijkstraAllShortestPaths(
+    startNode: T,
+    getAdjacentNodes: Callable[[T], Iterable[Tuple[T, float]]],
+    isDestNode: Callable[[T], bool],
+) -> Tuple[Optional[T], float, Iterable[list[T]]]:
+    result = _dijkstraInner(startNode, getAdjacentNodes, isDestNode)
+    return (
+        result[0],
+        result[1],
+        _convertPrevToPaths(result[0], startNode, [], result[3]),
+    )
+
+def _convertPrevToPaths(node: Optional[T], startNode: T, curpath: list[T], p: Dict[T, list[T]]) -> Iterable[list[T]]:
+    if node is None:
+        yield []
+        return
+
+    # We move backward toward the start node.
+    curpath.insert(0, node)
+    if node == startNode:
+        yield curpath
+        return
+
+    for prev in p[node]:
+        for path in _convertPrevToPaths(prev, startNode, curpath.copy(), p):
+            yield path
+
 # Implementation of Dijkstra's shortest-path algorithm which returns
 # shortest-path distances to all connected nodes in the graph.
 # Params:
@@ -45,12 +83,20 @@ def _dijkstraInner(
     startNode: T,
     getAdjacentNodes: Callable[[T], Iterable[Tuple[T, float | int]]],
     isDestNode: Callable[[T], bool],
-) -> Tuple[Optional[T], float | int, Dict[T, float | int]]:
+) -> Tuple[
+        Optional[T],
+        float | int,
+        Dict[T, float | int],
+        Dict[T, list[T]],
+    ]:
     # min-heap priority queue of points with distance from start as the key
     q: list[Any] = []
 
     # map from point to distance from start
     d: DefaultDict[T, float] = defaultdict(lambda: float('inf'))
+
+    # map from point to list of previous points in the shortest path(s)
+    p: Dict[T, list[T]] = {}
 
     # set of visited nodes, so we don't visit nodes more than once
     # (because we can't update entries in the priority queue)
@@ -59,6 +105,9 @@ def _dijkstraInner(
     # initialize with the start point
     heappush(q, (0, startNode))
     d[startNode] = 0
+
+    # The start node has no previous nodes.
+    p[startNode] = []
 
     while len(q) > 0:
         node = heappop(q)[1]
@@ -73,7 +122,7 @@ def _dijkstraInner(
         if isDestNode(node):
             # Done. (The third tuple value is empty because we don't need
             # to return all distances in this case.)
-            return (node, nodeDist, {})
+            return (node, nodeDist, {}, p.copy())
 
         for adjNode, adjNodeDist in getAdjacentNodes(node):
             assert adjNodeDist >= 0, 'negative weights not allowed: %d' % adjNodeDist
@@ -92,8 +141,16 @@ def _dijkstraInner(
                 d[adjNode] = newDist
                 heappush(q, (newDist, adjNode))
 
+                # Replace any prior previous points in the path.
+                p[adjNode] = [node]
+
+            elif newDist == d[adjNode]:
+                # If we have a point that's equally close, add it to our list.
+                assert adjNode in p, 'should have already encountered adjacent node: %s' % adjNode
+                p[adjNode].append(node)
+
     # There was no path from start to finish.
-    return (None, float('inf'), d.copy())
+    return (None, float('inf'), d.copy(), p.copy())
 
 # Computes the shortest distance between each pair of vertices. Edge weights
 # can be negative, but there can be no negative cycles.

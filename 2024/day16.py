@@ -1,5 +1,5 @@
 from typing import Iterator
-from common.shortestpath import dijkstra
+from common.shortestpath import dijkstra, dijkstraAllShortestPaths
 from common.arraygrid import ArrayGrid
 
 input = open('day16.txt').read().splitlines()
@@ -19,6 +19,9 @@ def parseInput() -> tuple[ArrayGrid, Coords, Coords]:
   assert (start is not None) and (end is not None), 'did not find start and end'
   return grid, start, end
 
+# We use Dijkstra's algorithm, such that each node is a (position,
+# direction) pair, since we need to keep track if which direction the
+# reindeer is facing.
 def getAdjacentNodes(grid: ArrayGrid, posdir: PosDir) -> Iterator[tuple[PosDir, int]]:
   (x, y), (dx, dy) = posdir
   for ax, ay in grid.getAdjacentCoords(x, y):
@@ -44,4 +47,17 @@ def part1() -> None:
   r = dijkstra(startNode, lambda pd: getAdjacentNodes(grid, pd), lambda pd: pd[0] == end)
   print(r[1])
 
-part1()
+def part2() -> None:
+  grid, start, end = parseInput()
+  print('start/end:', start, end)
+
+  startNode = start, (1, 0)
+  r = dijkstraAllShortestPaths(startNode, lambda pd: getAdjacentNodes(grid, pd), lambda pd: pd[0] == end)
+  allNodes = set()
+  allPaths = list(r[2])
+  print('shortest paths:', len(allPaths))
+  for path in allPaths:
+    allNodes.update([n[0] for n in path])
+  print(len(allNodes))
+
+part2()
