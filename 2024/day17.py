@@ -91,15 +91,16 @@ def findValue(level: int, value: int, program: list[int]) -> Optional[int]:
 
   # Through manual analysis, I determined that the input program does this:
   #
-  #   while A != 0:
+  #   do {
   #     B = mathematicalExpression(A)
   #     output(B)
   #     A = intdiv(A, 8)
+  #   } while (A != 0)
   #
   # Thus, the program outputs exactly one octal digit per loop iteration.
   # Since the program terminates when A == 0, A must be [1, 7] during the
   # previous iteration of the loop. I derived how to compute B from A, so
-  # we test all values [1, 7] of A and for each of them that results in B,
+  # we test all values [0, 7] of A and for each of them that results in B,
   # we have a candidate for that "level" of A. For each such candidate X,
   # we test the next level by testing the values [8 * X, 8 * X + 7] (since
   # that is the inverse of intdiv(8)). We continue this process until we
