@@ -32,7 +32,7 @@ def part1() -> None:
   grid = parseInput(xMax + 1, yMax + 1, n)
   grid.print2D({None: '.'})
 
-  start = 0,0
+  start = 0, 0
   end = xMax, yMax
 
   r = dijkstra(
@@ -42,4 +42,34 @@ def part1() -> None:
   )
   print(r[1])
 
-part1()
+def part2() -> None:
+  # Values for sample input:
+  # xMax, yMax = 6, 6
+
+  xMax, yMax = 70, 70
+
+  start = 0, 0
+  end = xMax, yMax
+
+  print('input:', len(input))
+
+  # Good ol' binary search.
+  low, high = 1, len(input) - 1
+  while low < high:
+    i = (low + high) // 2
+    grid = parseInput(xMax + 1, yMax + 1, i)
+    r = dijkstra(
+      start,
+      lambda p: getAdjacent(grid, p),
+      lambda p: p == end,
+    )
+    isBlocked = r[0] is None
+    print('test:', low, high, i, isBlocked)
+    if isBlocked:
+      high = i - 1
+    else:
+      low = i + 1
+
+  print(input[i + 1])
+
+part2()
