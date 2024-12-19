@@ -40,41 +40,38 @@ def explore(grid: SparseGrid, initialMachine: IntcodeVM) -> tuple[Coords, int]:
     start: initialMachine,
   }
 
-  # Each extraData is a (machine, dir) tuple
-  def getAdjacentNodes(pos: Coords) -> list[tuple[Coords, tuple[IntcodeVM, Dir]]]:
-    return [(getAdjacentPosition(pos, dir), (machines[pos].copy(), dir)) for dir in Dir]
+  def getAdjacentNodes(pos: Coords) -> list[Coords]:
+    assert pos in machines, 'should have already run machine for node'
+    machine = machines[pos]
+    result = []
+    for dir in Dir:
+      npos = getAdjacentPosition(pos, dir)
+      if npos not in machines:
+        machineCopy = machine.copy()
+        output = machineCopy.addInput(dir).runUntilSingleOutput()
+        values = ['#', '.', 'E']
+        grid.setValue(npos, values[output])
+        machines[npos] = machineCopy
 
-  def visit(
-    pos: Coords,
-    numSteps: int,
-    extraData: Optional[tuple[IntcodeVM, Dir]],
-  ) -> bool:
-    assert extraData is not None, 'missing extraData'
-    machine, dir = extraData
-    output = machine.addInput(dir).runUntilSingleOutput()
-    values = ['#', '.', 'E']
-    grid.setValue(pos, values[output])
+        if output == 2:
+          nonlocal end
+          assert end is None, 'already found result'
+          end = npos
 
-    if output == 2:
-      nonlocal end
-      assert end is None, 'already found result'
-      end = pos
 
-    # Keep going unless we hit a wall.
-    machines[pos] = machine
-    return output != 0
+      assert grid.hasValue(npos), 'should have already set value for pos'
+      if grid.getValue(npos) != '#':
+        # Include this node if it isn't a wall.
+        result.append(npos)
 
-  result = bfs(
-    start,
-    getAdjacentNodes,
-    visit,
-  )
+    return result
 
+  result = bfs(start, getAdjacentNodes)
   assert end is not None, 'did not find end'
   return (end, result[end])
 
 def fillWithOxygen(grid: SparseGrid, start: Coords) -> int:
-  def getAdjacentNodes(pos: Coords) -> list[tuple[Coords, None]]:
+  def getAdjacentNodes(pos: Coords) -> list[Coords]:
     deltas = [
       (-1, 0),
       (1, 0),
@@ -86,10 +83,10 @@ def fillWithOxygen(grid: SparseGrid, start: Coords) -> int:
     for dx, dy in deltas:
       npos = (x + dx, y + dy)
       if grid.getValue(npos) != '#':
-        result.append((npos, None))
+        result.append(npos)
     return result
 
-  result = bfs(start, getAdjacentNodes, lambda *_: True)
+  result = bfs(start, getAdjacentNodes)
   return max(result.values())
 
 def part1() -> None:

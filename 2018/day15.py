@@ -49,9 +49,10 @@ def getClosestAdjEnemyPos(grid: ArrayGrid, unit: Unit) -> Optional[Coords]:
   minSteps = 10000 # arbitrary
   def getAdj(node):
     x, y = node
-    return [(p, None) for p in grid.getAdjacentCoords(x, y)]
+    return [p for p in grid.getAdjacentCoords(x, y)]
 
-  def visit(node, numSteps, _):
+  def visit(node, numSteps):
+    # print('visiting:', node, numSteps)
     nonlocal minSteps
     if numSteps > minSteps:
       # We've already found a closer enemy. Do not consider this node.
@@ -59,7 +60,7 @@ def getClosestAdjEnemyPos(grid: ArrayGrid, unit: Unit) -> Optional[Coords]:
 
     x, y = node
     v = grid.getValue(x, y)
-    if v != '.':
+    if v != '.' and v != unit:
       return False
 
     for ax, ay in grid.getAdjacentCoords(x, y):
@@ -80,9 +81,9 @@ def getMinSteps(grid: ArrayGrid, src: Coords, dst: Coords) -> Optional[int]:
     x, y = node
     if node == dst:
       return []
-    return [(p, None) for p in grid.getAdjacentCoords(x, y)]
+    return [p for p in grid.getAdjacentCoords(x, y)]
 
-  def visit(node, *_):
+  def visit(node, _):
     x, y = node
     v = grid.getValue(x, y)
     return v == '.' or node == dst

@@ -68,17 +68,17 @@ def getAdjacentNodes(
   grid: ArrayGrid,
   portals: dict[Coords, Coords],
   pos: Coords,
-) -> list[tuple[Coords, Any]]:
+) -> list[Coords]:
   x, y = pos
   results = []
   for nx, ny in grid.getAdjacentCoords(x, y):
     v = grid.getValue(nx, ny)
     if v == '.':
       # Regular traversal.
-      results.append(((nx, ny), None))
+      results.append((nx, ny))
     elif v.isupper() and pos in portals:
       # Portal.
-      results.append((portals[pos], None))
+      results.append(portals[pos])
   return results
 
 def isOuterPortal(grid: ArrayGrid, pos: Coords) -> bool:
@@ -92,7 +92,7 @@ def getAdjacentNodes2(
   grid: ArrayGrid,
   portals: dict[Coords, Coords],
   node: tuple[Coords, int],
-) -> list[tuple[tuple[Coords, int], Any]]:
+) -> list[tuple[Coords, int]]:
   pos, level = node
   x, y = pos
   results = []
@@ -100,7 +100,7 @@ def getAdjacentNodes2(
     v = grid.getValue(nx, ny)
     if v == '.':
       # Regular traversal.
-      results.append((((nx, ny), level), None))
+      results.append(((nx, ny), level))
     elif v.isupper() and pos in portals:
       # An uppercase letter is adjacent to (x, y), so (x, y) must be a portal.
       other = portals[pos]
@@ -115,7 +115,7 @@ def getAdjacentNodes2(
         assert isOuterPortal(grid, other), 'other end should be outer'
         # Move inward.
         nlevel = level + 1
-      results.append(((other, nlevel), None))
+      results.append((other, nlevel))
   return results
 
 def part1() -> None:
@@ -131,11 +131,7 @@ def part1() -> None:
   print('start / end:', start, end)
   print('portals:', portals)
 
-  result = bfs(
-    start,
-    lambda pos: getAdjacentNodes(grid, portals, pos),
-    lambda *_: True,
-  )
+  result = bfs(start, lambda pos: getAdjacentNodes(grid, portals, pos))
   print(result[end])
 
 def part2() -> None:
@@ -154,8 +150,7 @@ def part2() -> None:
   result = bfs(
     (start, 1),
     lambda node: getAdjacentNodes2(grid, portals, node),
-    lambda *_: True,
-    lambda node, _: node[0] == end and node[1] == 1,
+    isEndNode=lambda node: node[0] == end and node[1] == 1,
   )
   print(result[(end, 1)])
 

@@ -14,19 +14,18 @@ def parseInput(width: int, height: int, n: int) -> ArrayGrid:
     grid.setValue(x, y, '#')
   return grid
 
-def getAdjacent(grid: ArrayGrid, coords: Coords) -> Iterable[tuple[Coords, None]]:
+def getAdjacent(grid: ArrayGrid, coords: Coords) -> Iterable[Coords]:
   x, y = coords
   for ax, ay in grid.getAdjacentCoords(x, y):
     v = grid.getValue(ax, ay)
     if v != '#':
-      yield (ax, ay), None
+      yield ax, ay
 
 def search(grid: ArrayGrid, start: Coords, end: Coords) -> Optional[int]:
   r = bfs(
     start,
     lambda p: getAdjacent(grid, p),
-    lambda p, _, __: True,
-    lambda p, _: p == end,
+    isEndNode=lambda p: p == end,
   )
   return r.get(end)
 
