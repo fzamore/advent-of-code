@@ -69,6 +69,22 @@ class ArrayGrid:
             for x in range(self._width):
                 yield (x, y, self.getValue(x, y))
 
+    def getAdjacentItems(
+        self,
+        x: int,
+        y: int,
+        *,
+        includeDiagonals: bool = False,
+        checkGridBounds: bool = True,
+    ) -> Iterator[tuple[int, int, Any]]:
+        for ax, ay in self.getAdjacentCoords(
+            x,
+            y,
+            includeDiagonals=includeDiagonals,
+            checkGridBounds=checkGridBounds,
+        ):
+            yield (ax, ay, self.getValue(ax, ay))
+
     def iterate(self, fn: Callable[[int, int, Any], None]) -> None:
         for y in range(self.getHeight()):
             for x in range(self.getWidth()):
