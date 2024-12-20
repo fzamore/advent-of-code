@@ -21,12 +21,9 @@ def countMatches(towels: tuple[str], pattern: str) -> int:
   if pattern == '':
     return 1
 
-  c = 0
-  for t in towels:
-    n = len(t)
-    if t == pattern[:n]:
-      c += countMatches(towels, pattern[n:])
-  return c
+  # Add up all recursive calls of the pattern substring after stripping
+  # off the towel prefix.
+  return sum([countMatches(towels, pattern[len(t):]) for t in towels if pattern.startswith(t)])
 
 def part1() -> None:
   towels, patterns = parseInput()
