@@ -19,18 +19,16 @@ def parseInput() -> tuple[ArrayGrid, Coords, Coords]:
   assert start is not None and end is not None, 'did not find start/end'
   return grid, start, end
 
+# Returns all points within the given manhattan distance of the given point.
 def getCheatEnds(grid: ArrayGrid, cheatStart: Coords, cheatLength: int) -> Iterable[Coords]:
-  ends = set()
-  def visit(pos: Coords, numSteps: int) -> bool:
-    if numSteps > cheatLength:
-      return False
+  x, y = cheatStart
+  for ny in range(y - cheatLength, y + cheatLength + 1):
+    for nx in range(x - cheatLength, x + cheatLength + 1):
+      if (nx, ny) == (x, y):
+        continue
 
-    if pos != cheatStart:
-      ends.add(pos)
-    return True
-
-  bfs(cheatStart, lambda p: grid.getAdjacentCoords(p[0], p[1]), visit)
-  return ends
+      if abs(nx - x) + abs(ny - y) <= cheatLength:
+        yield nx, ny
 
 def tryCheats(
   grid: ArrayGrid,
