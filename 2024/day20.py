@@ -20,7 +20,7 @@ def parseInput() -> tuple[ArrayGrid, Coords, Coords]:
   return grid, start, end
 
 # Returns all points within the given manhattan distance of the given point.
-def getCheatEnds(grid: ArrayGrid, cheatStart: Coords, cheatLength: int) -> Iterable[Coords]:
+def getCheatEnds(cheatStart: Coords, cheatLength: int) -> Iterable[Coords]:
   x, y = cheatStart
   for ny in range(y - cheatLength, y + cheatLength + 1):
     for nx in range(x - cheatLength, x + cheatLength + 1):
@@ -61,7 +61,7 @@ def tryCheats(
   for cheatStart in cheatsToTry:
     c1x, c1y = cheatStart
     assert grid.getValue(c1x, c1y) != '#', 'all c1 should be open'
-    for cheatEnd in getCheatEnds(grid, cheatStart, cheatLength):
+    for cheatEnd in getCheatEnds(cheatStart, cheatLength):
       c2x, c2y = cheatEnd
       if grid.getValue(c2x, c2y, '#') == '#':
         # The cheat would not land back on the track. Skip.
