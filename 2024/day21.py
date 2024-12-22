@@ -178,11 +178,7 @@ def part1() -> None:
 
   ans = 0
   for seq in input:
-    grids = [numericGrid]
-    starts = [numericStart]
-    for _ in range(levels - 1):
-      grids.append(directionalGrid)
-      starts.append(directionalStart)
+    starts = [numericStart] + [directionalStart for _ in range(levels - 1)]
 
     # Split the sequence up into characters, since it's far cheaper to
     # compute the sequence for each individual character.
@@ -195,10 +191,7 @@ def part1() -> None:
       bestLength += len(bestSeqPerLevel[levels - 1])
 
       # Compute the new starting positions for each level.
-      newStarts = [rnmap[c]]
-      for level in range(levels - 1):
-        newStarts.append(rdmap[bestSeqPerLevel[level][-1]])
-      starts = newStarts
+      starts = [rnmap[c]] + [rdmap[bestSeqPerLevel[level][-1]] for level in range(levels - 1)]
       print('seq result:', seq, bestLength)
 
     ans += bestLength * int(seq[:-1])
