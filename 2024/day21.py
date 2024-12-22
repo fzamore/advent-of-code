@@ -1,3 +1,4 @@
+from functools import cache
 from typing import Iterable
 from common.arraygrid import ArrayGrid
 from common.shortestpath import dijkstraAllShortestPaths
@@ -8,7 +9,6 @@ Coords = tuple[int, int]
 Delta = tuple[int, int]
 DeltaPath = Iterable[Delta]
 StrPath = list[str]
-Seq = str
 
 def initNumericGrid() -> tuple[ArrayGrid, Coords]:
   data = (
@@ -81,88 +81,18 @@ def convertDeltaPathToStrPath(deltaPath: Iterable[Delta]) -> StrPath:
   }
   return [deltaMap[d] for d in deltaPath]
 
-# Takes a list of all paths between adjacent nodes, and explodes it into a
-# single list of paths.
-def consolidatePaths(allSeqPaths: list[list[StrPath]], seqi: int = 0) -> list[StrPath]:
-  if seqi == len(allSeqPaths):
-    return [[]]
-
-  result = []
-  for prefix in allSeqPaths[seqi]:
-    for suffix in consolidatePaths(allSeqPaths, seqi + 1):
-      result.append(prefix + suffix)
-  return result
-
-# Finds all paths for the given sequence from the given start in the given
-# grid.
-def findAllPathsForSeq(grid: ArrayGrid, gridStart: Coords, seq: Seq) -> list[StrPath]:
-  allSeqPaths = []
-  start = gridStart
+# Finds all paths from start to the given character in the given grid.
+def findAllShortestPathsToChar(grid: ArrayGrid, start: Coords, char: str) -> Iterable[StrPath]:
+  assert len(char) == 1, 'sequence must be of length 1'
   reverseMap = convertGridToReverseMap(grid)
 
-  # Go through the sequence.
-  for c in seq:
-    target = reverseMap[c]
-    # Find all paths from start to that character.
-    deltaPaths = findAllDeltaPathsBetweenCells(grid, start, target)
+  target = reverseMap[char]
+  # Find all paths from start to that character.
+  for deltaPath in findAllDeltaPathsBetweenCells(grid, start, target):
+    # Add the button press to the path.
+    yield convertDeltaPathToStrPath(deltaPath) + ['A']
 
-    # Reset the start for the next iteration.
-    start = target
-
-    # Add all start -> target paths to the list of paths for the entire
-    # sequence.
-    allNodePaths = []
-    for deltaPath in deltaPaths:
-      # Add the button press to the path.
-      strPath = convertDeltaPathToStrPath(deltaPath) + ['A']
-      allNodePaths.append(strPath)
-    allSeqPaths.append(allNodePaths)
-
-  return consolidatePaths(allSeqPaths)
-
-# Finds all shortest paths for the given sequence in the given grid.
-def getShortestPathsForSeq(grid: ArrayGrid, start: Coords, seq: Seq) -> list[StrPath]:
-  paths = findAllPathsForSeq(grid, start, seq)
-  pathlen = min([len(p) for p in paths])
-  return [p for p in paths if len(p) == pathlen]
-
-# Find the best path length for the given sequence, in the given list of
-# grids and start positions (the first grid is the numeric grid).
-def findBestSeqPerLevel(
-  grids: tuple[ArrayGrid, ArrayGrid],
-  levels: int,
-  starts: list[Coords],
-  inputSeq: Seq,
-) -> dict[int, Seq]:
-  assert levels == len(starts), 'bad input to bestLengthForSeq'
-  bestSeqForLevel: dict[int, Seq] = {}
-
-  numericGrid, directionalGrid = grids
-
-  seqs = [(0, inputSeq)]
-  while len(seqs) > 0:
-    level, seq = seqs.pop(0)
-    if level == levels:
-      # We've reached the last level. Stop.
-      continue
-
-    # The first level is the numeric grid, and all other levels are the
-    # directional grid.
-    grid = numericGrid if level == 0 else directionalGrid
-    start = starts[level]
-
-    paths = getShortestPathsForSeq(grid, start, seq)
-    for path in paths:
-      pathseq = ''.join(path)
-      bestSeq = bestSeqForLevel.get(level)
-      if bestSeq is None or len(pathseq) <= len(bestSeq):
-        # We've found a sequence at least as good for this level.
-        bestSeqForLevel[level] = pathseq
-        seqs.append((level + 1, pathseq))
-
-  return bestSeqForLevel
-
-def part1() -> None:
+def solve(levels: int) -> int:
   numericGrid, numericStart = initNumericGrid()
   print('nstart:', numericStart)
   numericGrid.print2D({None: '.'})
@@ -171,31 +101,53 @@ def part1() -> None:
   print('dstart:', directionalStart)
   directionalGrid.print2D({None: '.'})
 
-  levels = 3
-
   rnmap = convertGridToReverseMap(numericGrid)
   rdmap = convertGridToReverseMap(directionalGrid)
 
-  ans = 0
+  # Advances the sequence by a the given single character in the given
+  # grid at the given recursive level. Returns the number of characters
+  # ultimately needed to express that character.
+  @cache
+  def advanceByOneChar(grid: ArrayGrid, start: Coords, level: int, char: str) -> int:
+    assert len(char) == 1, 'bad char'
+
+    if level == 0:
+      assert grid == directionalGrid, 'bad grid'
+      paths = findAllShortestPathsToChar(grid, start, char)
+      for path in paths:
+        return len(path)
+      assert False, 'should have found a path'
+
+    bestNumChars = float('inf')
+    paths = findAllShortestPathsToChar(grid, start, char)
+    for path in paths:
+      numChars = 0
+      dstart = directionalStart
+      for pathchar in path:
+        numChars += advanceByOneChar(directionalGrid, dstart, level - 1, pathchar)
+        # Update the start position for the next char in the sequence.
+        dstart = rdmap[pathchar]
+
+      # Keep track of our best result so far.
+      bestNumChars = min(numChars, bestNumChars)
+
+    return int(bestNumChars)
+
+  result = 0
   for seq in input:
-    starts = [numericStart] + [directionalStart for _ in range(levels - 1)]
-
-    # Split the sequence up into characters, since it's far cheaper to
-    # compute the sequence for each individual character.
-    bestLength = 0
+    seqLength = 0
+    start = numericStart
     for c in seq:
-      bestSeqPerLevel = findBestSeqPerLevel((numericGrid, directionalGrid), levels, starts, c)
-      print('bestSeqPerLevel:', c, bestSeqPerLevel)
+      seqLength += advanceByOneChar(numericGrid, start, levels, c)
+      start = rnmap[c]
+    print('seq:', seq, seqLength)
+    result += seqLength * int(seq[:-1])
+  return result
 
-      # Add the length of the sequence of the last level to our total.
-      bestLength += len(bestSeqPerLevel[levels - 1])
+def part1() -> None:
+  print(solve(2))
 
-      # Compute the new starting positions for each level.
-      starts = [rnmap[c]] + [rdmap[bestSeqPerLevel[level][-1]] for level in range(levels - 1)]
-      print('seq result:', seq, bestLength)
+def part2() -> None:
+  print(solve(25))
 
-    ans += bestLength * int(seq[:-1])
-
-  print(ans)
-
-part1()
+part2()
