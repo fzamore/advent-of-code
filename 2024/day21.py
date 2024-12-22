@@ -10,7 +10,7 @@ DeltaPath = Iterable[Delta]
 StrPath = list[str]
 Seq = str
 
-def initNumericPad() -> tuple[ArrayGrid, Coords]:
+def initNumericGrid() -> tuple[ArrayGrid, Coords]:
   data = (
     ((0, 0), 7),
     ((1, 0), 8),
@@ -30,7 +30,7 @@ def initNumericPad() -> tuple[ArrayGrid, Coords]:
     grid.setValue(x, y, str(v))
   return grid, (2, 3)
 
-def initDirectionalPad() -> tuple[ArrayGrid, Coords]:
+def initDirectionalGrid() -> tuple[ArrayGrid, Coords]:
   data = (
     ((1, 0), '^'),
     ((2, 0), 'A'),
@@ -127,47 +127,82 @@ def getShortestPathsForSeq(grid: ArrayGrid, start: Coords, seq: Seq) -> list[Str
   return [p for p in paths if len(p) == pathlen]
 
 # Find the best path length for the given sequence, in the given list of
-# grids (the first grid is the numeric grid).
-def bestLengthForSeq(grids: list[tuple[ArrayGrid, Coords]], inputSeq: Seq) -> int:
-  bestForLevel = dict([(i, 10000000) for i in range(len(grids) + 1)])
+# grids and start positions (the first grid is the numeric grid).
+def findBestSeqPerLevel(
+  grids: tuple[ArrayGrid, ArrayGrid],
+  levels: int,
+  starts: list[Coords],
+  inputSeq: Seq,
+) -> dict[int, Seq]:
+  assert levels == len(starts), 'bad input to bestLengthForSeq'
+  bestSeqForLevel: dict[int, Seq] = {}
+
+  numericGrid, directionalGrid = grids
 
   seqs = [(0, inputSeq)]
   while len(seqs) > 0:
     level, seq = seqs.pop(0)
-    if level == len(grids):
-      bestForLevel[level] = min(bestForLevel[level], len(seq))
+    if level == levels:
+      # We've reached the last level. Stop.
       continue
 
-    grid, start = grids[level]
+    # The first level is the numeric grid, and all other levels are the
+    # directional grid.
+    grid = numericGrid if level == 0 else directionalGrid
+    start = starts[level]
+
     paths = getShortestPathsForSeq(grid, start, seq)
     for path in paths:
       pathseq = ''.join(path)
-      if len(pathseq) <= bestForLevel[level]:
-        bestForLevel[level] = len(pathseq)
+      bestSeq = bestSeqForLevel.get(level)
+      if bestSeq is None or len(pathseq) <= len(bestSeq):
+        # We've found a sequence at least as good for this level.
+        bestSeqForLevel[level] = pathseq
         seqs.append((level + 1, pathseq))
 
-  return bestForLevel[len(grids)]
+  return bestSeqForLevel
 
 def part1() -> None:
-  ngrid, nstart = initNumericPad()
-  print('nstart:', nstart)
-  ngrid.print2D({None: '.'})
+  numericGrid, numericStart = initNumericGrid()
+  print('nstart:', numericStart)
+  numericGrid.print2D({None: '.'})
 
-  dgrid, dstart = initDirectionalPad()
-  print('dstart:', dstart)
-  dgrid.print2D({None: '.'})
+  directionalGrid, directionalStart = initDirectionalGrid()
+  print('dstart:', directionalStart)
+  directionalGrid.print2D({None: '.'})
 
-  grids = [
-    (ngrid, nstart),
-    (dgrid, dstart),
-    (dgrid, dstart),
-  ]
+  levels = 3
+
+  rnmap = convertGridToReverseMap(numericGrid)
+  rdmap = convertGridToReverseMap(directionalGrid)
 
   ans = 0
   for seq in input:
-    b = bestLengthForSeq(grids, seq)
-    print('seq result:', seq, b)
-    ans += b * int(seq[:-1])
+    grids = [numericGrid]
+    starts = [numericStart]
+    for _ in range(levels - 1):
+      grids.append(directionalGrid)
+      starts.append(directionalStart)
+
+    # Split the sequence up into characters, since it's far cheaper to
+    # compute the sequence for each individual character.
+    bestLength = 0
+    for c in seq:
+      bestSeqPerLevel = findBestSeqPerLevel((numericGrid, directionalGrid), levels, starts, c)
+      print('bestSeqPerLevel:', c, bestSeqPerLevel)
+
+      # Add the length of the sequence of the last level to our total.
+      bestLength += len(bestSeqPerLevel[levels - 1])
+
+      # Compute the new starting positions for each level.
+      newStarts = [rnmap[c]]
+      for level in range(levels - 1):
+        newStarts.append(rdmap[bestSeqPerLevel[level][-1]])
+      starts = newStarts
+      print('seq result:', seq, bestLength)
+
+    ans += bestLength * int(seq[:-1])
+
   print(ans)
 
 part1()
