@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 input = open('day22.txt').read().splitlines()
 
 def step(n: int) -> int:
@@ -17,4 +19,33 @@ def part1() -> None:
     ans += secretNumber
   print(ans)
 
-part1()
+def part2() -> None:
+  n = 2000
+
+  pricesBySeq: dict[tuple[int, int, int, int], int] = defaultdict(int)
+
+  print('size:', len(input))
+
+  for line in input:
+    secretNumber = int(line)
+    last = secretNumber
+    changes = []
+    digits = []
+    for _ in range(n):
+      digits.append(secretNumber % 10)
+      secretNumber = step(secretNumber)
+      changes.append((secretNumber % 10) - (last % 10))
+      last = secretNumber
+
+    seen = set()
+    for i in range(len(changes) - 4):
+      seq = tuple(changes[i:i + 4])
+      assert len(seq) == 4, 'bad seq'
+      if seq not in seen:
+        seen.add(seq)
+        pricesBySeq[seq] += digits[i + 4]
+
+  print('number of sequences:', len(pricesBySeq))
+  print(max(pricesBySeq.values()))
+
+part2()
