@@ -17,6 +17,7 @@ def parseInput() -> Graph:
 
 # Returns whether the given node is connected with every node in the given set.
 def isFullyConnected(graph: Graph, s: set[str], node: str) -> bool:
+  assert node not in s, 'node already in set'
   for n in s:
     if node not in graph[n]:
       return False
