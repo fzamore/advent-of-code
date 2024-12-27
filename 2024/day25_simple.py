@@ -3,7 +3,7 @@ from itertools import combinations
 input = open('day25.txt').read().rstrip().split("\n\n")
 
 def overlap(a: str, b: str) -> bool:
-  assert len(a) == len(b), 'strings must be equal'
+  assert len(a) == len(b), 'strings must be equal lengths'
   return any(a[i] == '#' and b[i] == '#' for i in range(len(a)))
 
 def part1() -> None:
