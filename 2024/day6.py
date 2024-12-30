@@ -1,9 +1,8 @@
-from common.arraygrid import ArrayGrid
+from common.arraygrid import ArrayGrid, turnRight, Delta
 
 input = open('day6.txt').read().splitlines()
 
 Coords = tuple[int, int]
-Dir = tuple[int, int]
 
 def findStart(grid: ArrayGrid) -> Coords:
   for x, y, v in grid.getItems():
@@ -11,22 +10,9 @@ def findStart(grid: ArrayGrid) -> Coords:
       return (x, y)
   assert False, 'did not find start'
 
-def turnRight(dir: Dir) -> Dir:
-  match dir:
-    case 1, 0:
-      return 0, 1
-    case 0, 1:
-      return -1, 0
-    case -1, 0:
-      return 0, -1
-    case 0, -1:
-      return 1, 0
-    case _:
-      assert False, 'bad dir'
-
-def goStraight(grid: ArrayGrid, pos: Coords, dir: Dir) -> tuple[Coords, set[Coords]]:
+def goStraight(grid: ArrayGrid, pos: Coords, delta: Delta) -> tuple[Coords, set[Coords]]:
   x, y = pos
-  dx, dy = dir
+  dx, dy = delta
   seen = {(x, y)}
   while grid.getValue(x + dx, y + dy, 'X') != '#':
     x += dx
@@ -36,18 +22,18 @@ def goStraight(grid: ArrayGrid, pos: Coords, dir: Dir) -> tuple[Coords, set[Coor
     seen.add((x, y))
   return (x, y), seen
 
-def iterate(grid: ArrayGrid, start: Coords, dir: Dir) -> set[Coords]:
+def iterate(grid: ArrayGrid, start: Coords, delta: Delta) -> set[Coords]:
   x, y = start
   totalSeen = set()
   while grid.areCoordsWithinBounds(x, y):
-    (x, y), seen = goStraight(grid, (x, y), dir)
+    (x, y), seen = goStraight(grid, (x, y), delta)
     for pos in seen:
-      if (pos, dir) in totalSeen:
+      if (pos, delta) in totalSeen:
         # Returning an empty set indicates there was a loop.
         return set()
-      totalSeen.add((pos, dir))
-    dir = turnRight(dir)
-  return set([pos for (pos, dir) in totalSeen])
+      totalSeen.add((pos, delta))
+    delta = turnRight(delta)
+  return set([pos for (pos, _) in totalSeen])
 
 def part1() -> None:
   grid = ArrayGrid.gridFromInput(input)
@@ -64,14 +50,14 @@ def part2() -> None:
   start = findStart(grid)
   print('start:', start)
 
-  dir = 0, -1
-  totalSeen = iterate(grid, start, dir)
+  delta = 0, -1
+  totalSeen = iterate(grid, start, delta)
 
   ans = 0
   # Try each point in the path (since blockages in other points will have no effect).
   for x, y in totalSeen:
     grid.setValue(x, y, '#')
-    if len(iterate(grid, start, dir)) == 0:
+    if len(iterate(grid, start, delta)) == 0:
       # We found a loop.
       ans += 1
     grid.setValue(x, y, '.')
