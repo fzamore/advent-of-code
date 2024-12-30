@@ -1,5 +1,19 @@
 from typing import Any, Callable, Hashable, Iterator, Optional
 
+Delta = tuple[int, int]
+
+def turnRight(delta: Delta) -> Delta:
+    match delta:
+        case 1, 0: return 0, 1
+        case 0, 1: return -1, 0
+        case -1, 0: return 0, -1
+        case 0, -1: return 1, 0
+        case _: assert False, 'bad input delta: %s' % str(delta)
+
+def turnLeft(delta: Delta) -> Delta:
+    dx, dy = turnRight(delta)
+    return dx * -1, dy * -1
+
 class ArrayGrid:
     def __init__(self, width: int, height: int) -> None:
         self._width = width
