@@ -6,11 +6,9 @@ from common.shortestpath import dijkstraAllShortestPaths
 input = open('day21.txt').read().splitlines()
 
 Coords = tuple[int, int]
-Delta = tuple[int, int]
-DeltaPath = Iterable[Delta]
-StrPath = list[str]
+CharPath = list[str]
 
-def initNumericGrid() -> tuple[ArrayGrid, Coords]:
+def initNumericGrid() -> ArrayGrid:
   data = (
     ((0, 0), 7),
     ((1, 0), 8),
@@ -24,13 +22,12 @@ def initNumericGrid() -> tuple[ArrayGrid, Coords]:
     ((1, 3), 0),
     ((2, 3), 'A'),
   )
-
-  grid = ArrayGrid(3,4)
+  grid = ArrayGrid(3, 4)
   for (x, y), v in data:
     grid.setValue(x, y, str(v))
-  return grid, (2, 3)
+  return grid
 
-def initDirectionalGrid() -> tuple[ArrayGrid, Coords]:
+def initDirectionalGrid() -> ArrayGrid:
   data = (
     ((1, 0), '^'),
     ((2, 0), 'A'),
@@ -41,7 +38,7 @@ def initDirectionalGrid() -> tuple[ArrayGrid, Coords]:
   grid = ArrayGrid(3, 2)
   for (x, y), v in data:
     grid.setValue(x, y, v)
-  return grid, (2, 0)
+  return grid
 
 def convertGridToReverseMap(grid: ArrayGrid) -> dict[str, Coords]:
   r = {}
@@ -50,18 +47,28 @@ def convertGridToReverseMap(grid: ArrayGrid) -> dict[str, Coords]:
       r[str(v)] = x, y
   return r
 
-# Converts the given past as a list of coords to a list of deltas.
-def convertPathToDeltas(coordsPath: list[Coords]) -> DeltaPath:
+# Converts the given path as a list of coords to a list of characters representing deltas.
+def convertCoordsPathToCharPath(coordsPath: list[Coords]) -> CharPath:
+  deltaMap = {
+    (1, 0): '>',
+    (0, 1): 'v',
+    (-1, 0): '<',
+    (0, -1): '^',
+  }
+
+  strPath = []
   for i in range(len(coordsPath) - 1):
     x, y = coordsPath[i]
     nx, ny = coordsPath[i + 1]
     dx, dy = nx - x, ny - y
-    yield dx, dy
+    strPath.append(deltaMap[(dx, dy)])
+  return strPath
 
 # Finds all shortest paths between the two given cells in the given grid.
-# Each path in the return value is expressed as a list of (dx, dy) deltas
-# between adjacent nodes in the path.
-def findAllDeltaPathsBetweenCells(grid: ArrayGrid, start: Coords, end: Coords) -> Iterable[DeltaPath]:
+# Each path in the return value is expressed as a list of directional
+# characters (^, v, <, >,) between adjacent nodes in the path, plus the
+# "A" button press at the end of each path.
+def findAllShortestPathsBetweenCells(grid: ArrayGrid, start: Coords, end: Coords) -> Iterable[CharPath]:
   def getAdj(pos: Coords) -> Iterable[tuple[Coords, int]]:
     x, y = pos
     for ax, ay in grid.getAdjacentCoords(x, y):
@@ -70,59 +77,38 @@ def findAllDeltaPathsBetweenCells(grid: ArrayGrid, start: Coords, end: Coords) -
 
   r = dijkstraAllShortestPaths(start, getAdj, lambda p: p == end)
   for path in r[2]:
-    yield convertPathToDeltas(path)
-
-def convertDeltaPathToStrPath(deltaPath: Iterable[Delta]) -> StrPath:
-  deltaMap = {
-    (1, 0): '>',
-    (0, 1): 'v',
-    (-1, 0): '<',
-    (0, -1): '^',
-  }
-  return [deltaMap[d] for d in deltaPath]
-
-# Finds all paths from start to the given character in the given grid.
-def findAllShortestPathsToChar(grid: ArrayGrid, start: Coords, char: str) -> Iterable[StrPath]:
-  assert len(char) == 1, 'sequence must be of length 1'
-  reverseMap = convertGridToReverseMap(grid)
-
-  target = reverseMap[char]
-  # Find all paths from start to that character.
-  for deltaPath in findAllDeltaPathsBetweenCells(grid, start, target):
-    # Add the button press to the path.
-    yield convertDeltaPathToStrPath(deltaPath) + ['A']
+    yield convertCoordsPathToCharPath(path) + ['A']
 
 def solve(levels: int) -> int:
-  numericGrid, numericStart = initNumericGrid()
-  print('nstart:', numericStart)
+  numericGrid = initNumericGrid()
   numericGrid.print2D({None: '.'})
 
-  directionalGrid, directionalStart = initDirectionalGrid()
-  print('dstart:', directionalStart)
+  directionalGrid = initDirectionalGrid()
   directionalGrid.print2D({None: '.'})
 
   rnmap = convertGridToReverseMap(numericGrid)
   rdmap = convertGridToReverseMap(directionalGrid)
 
   # Advances the sequence by a the given single character in the given
-  # grid at the given recursive level. Returns the number of characters
-  # ultimately needed to express that character.
+  # grid at the given recursive level. Returns the minimum number of
+  # characters ultimately needed to express that character.
   @cache
   def advanceByOneChar(grid: ArrayGrid, start: Coords, level: int, char: str) -> int:
     assert len(char) == 1, 'bad char'
 
+    # Find all shortest paths between start and destination for this particular grid.
+    rmap = rnmap if grid == numericGrid else rdmap
+    paths = findAllShortestPathsBetweenCells(grid, start, rmap[char])
+
     if level == 0:
-      assert grid == directionalGrid, 'bad grid'
-      paths = findAllShortestPathsToChar(grid, start, char)
-      for path in paths:
-        return len(path)
-      assert False, 'should have found a path'
+      # Return the length of the first path, since all paths are equal lengths.
+      return len(list(paths)[0])
 
     bestNumChars = float('inf')
-    paths = findAllShortestPathsToChar(grid, start, char)
     for path in paths:
+      # Recursively calculate the total length of this path.
       numChars = 0
-      dstart = directionalStart
+      dstart = rdmap['A']
       for pathchar in path:
         numChars += advanceByOneChar(directionalGrid, dstart, level - 1, pathchar)
         # Update the start position for the next char in the sequence.
@@ -131,12 +117,13 @@ def solve(levels: int) -> int:
       # Keep track of our best result so far.
       bestNumChars = min(numChars, bestNumChars)
 
+    assert bestNumChars != float('inf'), 'did not find best path'
     return int(bestNumChars)
 
   result = 0
   for seq in input:
     seqLength = 0
-    start = numericStart
+    start = rnmap['A']
     for c in seq:
       seqLength += advanceByOneChar(numericGrid, start, levels, c)
       start = rnmap[c]
