@@ -17,6 +17,7 @@ if __name__ == '__main__':
     ('no ints in this string', []),
     ('making sure that 3 5 can be parsed with a c=-7 newline\n', [3, 5, -7]),
     ('decimals are handled poorly: 4.5', [4, 5]),
+    ('ranges are handled poorly: 4-5', [4, -5]),
   ]
 
   for s, expected in testcases:
