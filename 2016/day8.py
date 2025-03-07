@@ -5,32 +5,33 @@ input = open('day8.txt').read().splitlines()
 width = 50
 height = 6
 
+Coords = tuple[int, int]
+
 def rect(grid: SparseGrid, w: int, h: int) -> None:
   for x in range(w):
     for y in range(h):
       grid.setValue((x, y), '#')
 
-def row(grid: SparseGrid, y: int, n: int) -> None:
-  newRow = {}
-  for x in range(width):
-    nx = (x + n) % width
-    newRow[nx] = grid.hasValue((x, y))
-  for x in newRow:
-    if newRow[x]:
+def updateGrid(grid: SparseGrid, updates: dict[Coords, bool]) -> None:
+  for x, y in updates:
+    if updates[(x, y)]:
       grid.setValue((x, y), '#')
     else:
       grid.deleteValue((x, y))
 
+def row(grid: SparseGrid, y: int, n: int) -> None:
+  updates = {}
+  for x in range(width):
+    nx = (x + n) % width
+    updates[(nx, y)] = grid.hasValue((x, y))
+  updateGrid(grid, updates)
+
 def col(grid: SparseGrid, x: int, n: int) -> None:
-  newCol = {}
+  updates = {}
   for y in range(height):
     ny = (y + n) % height
-    newCol[ny] = grid.hasValue((x, y))
-  for y in newCol:
-    if newCol[y]:
-      grid.setValue((x, y), '#')
-    else:
-      grid.deleteValue((x, y))
+    updates[(x, ny)] = grid.hasValue((x, y))
+  updateGrid(grid, updates)
 
 def part1() -> None:
   grid = SparseGrid(2)
