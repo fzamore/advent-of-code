@@ -6,7 +6,7 @@ def parseInput() -> list[tuple[int, int]]:
   r = []
   for line in input:
     a, b = ints(line)
-    assert b < 0
+    assert b < 0, 'ints() should parse a dash as negative'
     r.append((a, -b))
   return r
 

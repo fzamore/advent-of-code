@@ -26,4 +26,3 @@ if __name__ == '__main__':
     _test(s, expected)
 
   print('All tests passed.')
-
