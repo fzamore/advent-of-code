@@ -24,8 +24,10 @@ def subtractRange(r1: range, r2: range) -> SubtractionResult:
   else:
     assert False, 'bad range subtraction: %s, %s' % (r1, r2)
 
-# Subtracts multiples ranges from a single range. The result is a list of
-# ranges.
+# Subtracts multiple ranges from a single range. Only non-empty ranges are
+# included in the result. Maximum number of results is 2^(number of
+# minuends), due to each individual subtraction generating up to two
+# results (i.e., branching factor of two).
 def subtractMultipleRanges(subtrahend: range, minuends: Iterable[range]) -> list[range]:
   results = [subtrahend]
   for minuend in minuends:

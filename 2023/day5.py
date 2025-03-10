@@ -1,6 +1,6 @@
-from collections import defaultdict
 from dataclasses import dataclass
 from typing import Optional
+from common.ranges import subtractMultipleRanges
 
 input = open('day5.txt').read().split("\n\n")
 
@@ -39,45 +39,6 @@ def intersectRanges(r1: range, r2: range) -> Optional[range]:
   if r2.start > r1.stop or r1.start > r2.stop:
     return None
   return range(max(r1.start, r2.start), min(r1.stop, r2.stop))
-
-# Subtracts r2 from r1. There are two results, any of which may be empty.
-def subtractRanges(r1: range, r2: range) \
-  -> tuple[Optional[range], Optional[range]]:
-  if r2.stop < r1.start:
-    # no overlap
-    return (None, r1)
-  if r2.start > r1.stop:
-    # no overlap
-    return (r1, None)
-  if r2.start <= r1.start and r2.stop >= r1.stop:
-    # r1 entirely contained within r2
-    return (None, None)
-  if r2.start > r1.start and r2.stop < r1.stop:
-    # r2 entirely contained between within r1
-    return (range(r1.start, r2.start - 1), range(r2.stop + 1, r1.stop))
-  if r2.start <= r1.start:
-    return (None, range(r2.stop + 1, r1.stop))
-  if r2.stop >= r1.stop:
-    return (range(r1.start, r2.start - 1), None)
-  else:
-    assert False, 'bad range subtraction: %s, %s' % (r1, r2)
-
-# Subtracts multiple ranges from a single range. Only non-empty ranges are
-# included in the result. Maximum number of results is 2^(number of
-# minuends), due to each individual subtraction generating up to two
-# results (i.e., branching factor of two).
-def subtractMultipleRanges(subtrahend: range, minuends: list[range]) \
-  -> list[range]:
-  subtrahends = defaultdict(list)
-  subtrahends[0].append(subtrahend)
-  for i in range(len(minuends)):
-    for subtra in subtrahends[i]:
-      r1, r2 = subtractRanges(subtra, minuends[i])
-      if r1 is not None:
-        subtrahends[i + 1].append(r1)
-      if r2 is not None:
-        subtrahends[i + 1]. append(r2)
-  return subtrahends[len(minuends)]
 
 # Combines two maps into a single map.
 def combineMaps(m1: Map, m2: Map) -> Map:
