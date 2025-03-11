@@ -13,10 +13,11 @@ def part1() -> None:
 
   # This starts at elf zero (we assume zero-indexed).
   d = deque(range(input))
+  # Eliminate the elf to its left.
+  d.rotate(-1)
   while len(d) > 1:
-    # Eliminate the elf to its left.
-    d.rotate(-1)
     d.popleft()
+    d.rotate(-1)
   assert len(d) == 1, 'bad deque management'
   print(d.pop() + 1)
 
