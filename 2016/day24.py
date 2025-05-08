@@ -14,7 +14,7 @@ def getShortestPathLen(grid: ArrayGrid, c1: Coords, c2: Coords) -> int:
       if grid.getValue(ax, ay) != '#':
         yield ax, ay
 
-  def isDone(c):
+  def isDone(c: Coords) -> bool:
     return c == c2
 
   r = bfs(c1, getAdj, isEndNode=isDone)
@@ -42,7 +42,7 @@ def computePairwiseShortestPaths(
 def getOrderings(waypoints: dict[str, Coords]) -> Iterable[tuple]:
   for ordering in permutations(waypoints.values()):
     if ordering[0] == waypoints['0']:
-      # We consider this ordering if it begins at the start.
+      # We consider this ordering only if it begins at the start.
       yield ordering
 
 def part1() -> None:
