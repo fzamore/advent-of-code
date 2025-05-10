@@ -78,10 +78,10 @@ class ArrayGrid:
                 yield (x, y)
 
     # Returns an (x, y, value) tuple for each item in the grid.
-    def getItems(self) -> Iterator[tuple[int, int, Any]]:
+    def getItems(self, default: Any = None) -> Iterator[tuple[int, int, Any]]:
         for y in range(self._height):
             for x in range(self._width):
-                yield (x, y, self.getValue(x, y))
+                yield (x, y, self.getValue(x, y, default))
 
     def getAdjacentItems(
         self,
