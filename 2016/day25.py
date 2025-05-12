@@ -58,11 +58,12 @@ def part1() -> None:
   instrs = data
   print('instrs:', len(instrs))
 
-  # Through inspection and testing, the input works as follows. The input
-  # "a" is increased by a constant. Then, there is a loop which outputs 0
-  # if "a" is even (or 1 is "a" is odd), then does divides "a" by 2 and
-  # repeats. When "a" gets to zero, it is reset to the value of the
-  # original value (with the constant added) and the process repeats.
+  # Through inspection and testing, the sequence of instructions works
+  # as follows. The input "a" is increased by a constant. Then, there
+  # is a loop which outputs 0 if "a" is even (or 1 is "a" is
+  # odd). Next, it divides "a" by 2 and repeats. When "a" gets to
+  # zero, it is reset to the value of the original value (with the
+  # constant added) and the process repeats.
   #
   # So, we need the value of (a + k) to be the smallest integer such that
   # repeatedly dividing by two produces an alternating sequence of even

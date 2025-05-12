@@ -4,7 +4,7 @@ inp = open('day25.txt').read().split(',')
 
 def part1() -> None:
   # I got pretty lucky when exploring the maze manually and drawing out
-  # the maze on paper. I manually determined the correct combination if
+  # the maze on paper. I manually determined the correct combination of
   # items I needed to get past the checkpoint: mug, prime number, food
   # ration, and fuel cell.
 
