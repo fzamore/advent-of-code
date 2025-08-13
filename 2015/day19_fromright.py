@@ -44,6 +44,10 @@ def part2() -> None:
   molecule = target
   steps = 0
   while molecule != 'e':
+    # This approach was stolen from Reddit. If you scan the string from
+    # the right, you can apply replacements serially until you reach the
+    # target molecule. If you instead scan from the left, the approach
+    # won't work.
     molecule = next(getReplacementsFromRight(reverseMap, molecule))
     steps += 1
   print('done.')
