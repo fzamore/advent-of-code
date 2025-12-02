@@ -26,7 +26,10 @@ def isInvalid(s: str, d: int = 2) -> bool:
 
 def isInvalidAny(v: int) -> bool:
   s = str(v)
-  return any(isInvalid(s, f) for f in factors(len(s)))
+  for f in factors(len(s)):
+    if isInvalid(s, f):
+      return True
+  return False
 
 @cache
 def factors(n: int) -> Collection[int]:
