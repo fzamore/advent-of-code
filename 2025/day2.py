@@ -18,8 +18,12 @@ def isInvalid(v: int, d: int = 2) -> bool:
     return False
 
   # Split up into equally-sized chunks, and return whether all chunks are equal.
-  parts = list(batched(s, n // d))
-  return len(set(parts)) == 1
+  parts = batched(s, n // d)
+  first = next(parts)
+  for part in parts:
+    if first != part:
+      return False
+  return True
 
 def isInvalidAny(v: int) -> bool:
   return any(isInvalid(v, f) for f in factors(len(str(v))))
@@ -27,11 +31,11 @@ def isInvalidAny(v: int) -> bool:
 @cache
 def factors(n: int) -> Collection[int]:
   result = set()
-  for i in range(1, int(sqrt(n)) + 2):
+  for i in range(1, int(sqrt(n)) + 1):
     if n % i == 0:
       result.add(i)
       result.add(n // i)
-  # Don't include 1 in the result, as that would include every number.
+  # Don't include 1 in the result, as that would include every value.
   result.remove(1)
   return result
 
