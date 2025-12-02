@@ -11,7 +11,7 @@ def parse() -> Iterable[int]:
 
 def doesPassZeroInPartialLoop(dial: int, v: int, m: int) -> bool:
   newdial = (dial + v) % m
-  assert newdial != dial, 'no zeroes allowed'
+  assert newdial != dial, 'loops starting and ending at zero are not allowed'
   if v > 0:
     # Going right is simple; we pass zero in partial loop if we end up lower than we started.
     return newdial < dial
