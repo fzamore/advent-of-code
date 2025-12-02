@@ -11,8 +11,7 @@ def parse() -> Iterable[tuple[int, int]]:
     start, end = map(int, rng.split('-'))
     yield start, end
 
-def isInvalid(v: int, d: int = 2) -> bool:
-  s = str(v)
+def isInvalid(s: str, d: int = 2) -> bool:
   n = len(s)
   if n % d != 0:
     return False
@@ -26,7 +25,8 @@ def isInvalid(v: int, d: int = 2) -> bool:
   return True
 
 def isInvalidAny(v: int) -> bool:
-  return any(isInvalid(v, f) for f in factors(len(str(v))))
+  s = str(v)
+  return any(isInvalid(s, f) for f in factors(len(s)))
 
 @cache
 def factors(n: int) -> Collection[int]:
@@ -44,7 +44,7 @@ def part1() -> None:
   print('ranges:', len(ranges))
   ans = 0
   for start, end in ranges:
-    ans += sum(i if isInvalid(i) else 0 for i in range(start, end + 1))
+    ans += sum(i if isInvalid(str(i)) else 0 for i in range(start, end + 1))
   print(ans)
 
 def part2() -> None:
