@@ -39,32 +39,33 @@ def part2() -> None:
   # Iterate through the start and stop values of all ranges in increasing
   # order. Maintain a polarity integer that tracks whether or not we are
   # currently within a range (positive means within a range, zero means
-  # not; cannot be negative). At each value, determine if it's an "on" or
-  # "off". If this "off" value closes a range, add the count so far. If a
-  # value is both an "on" and "off", we need to process the "on"s first.
+  # not; cannot be negative). At each value, determine if it's a start or
+  # end. If this end value closes a range, add the count so far. If a
+  # value is both a start and end, we need to process the starts first.
 
   polarity = 0 # Whether we are currently in a range.
-  onValue = None # Value that turned on the current range.
+  startValue = None # Value that started the current range.
   count = 0
 
-  # Sort the keys, but break ties by always putting on's before off's.
+  # Sort the keys, but break ties by always putting starts before ends.
   sortedKeys = sorted(keys, key=lambda x: (x[0], (1 if x[1] else 2)))
-  for k, isOn in sortedKeys:
+  for k, isStart in sortedKeys:
     assert polarity >= 0, 'bad polarity'
 
-    if isOn:
+    if isStart:
       polarity += 1
-      if onValue is None:
-        onValue = k
+      if startValue is None:
+        startValue = k
     else:
       polarity -= 1
       if polarity == 0:
-        # This "off" value closes a range. Add the count.
-        assert onValue is not None, 'onValue not set'
-        delta = k - onValue + 1
-        print('adding:', k, onValue, delta)
+        # This end value closes a range. Add the count.
+        assert startValue is not None, 'startValue not set'
+        delta = k - startValue + 1
+        print('adding:', k, startValue, delta)
         count += delta
-        onValue = None
+        # Reset the start value.
+        startValue = None
 
   print(count)
 
