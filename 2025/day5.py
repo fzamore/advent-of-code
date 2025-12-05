@@ -1,5 +1,3 @@
-from collections import Counter
-
 data = open('day5.txt').read().splitlines()
 
 Range = tuple[int, int]
@@ -33,39 +31,33 @@ def part2() -> None:
   ranges, _ = parse()
   print('data:', len(ranges))
 
-  onLookup: dict[int, int] = Counter()
-  offLookup: dict[int, int] = Counter()
+  keys = []
   for rs, re in ranges:
-    onLookup[rs] += 1
-    offLookup[re] += 1
+    keys.append((rs, True))
+    keys.append((re, False))
 
   # Iterate through the start and stop values of all ranges in increasing
   # order. Maintain a polarity integer that tracks whether or not we are
   # currently within a range (positive means within a range, zero means
   # not; cannot be negative). At each value, determine if it's an "on" or
-  # "off". If this "off" value closes a range, add the count so far. We
-  # need to take into account that each value could be present in multiple
-  # ranges, as either or both of "on" or "off".
+  # "off". If this "off" value closes a range, add the count so far. If a
+  # value is both an "on" and "off", we need to process the "on"s first.
 
   polarity = 0 # Whether we are currently in a range.
   onValue = None # Value that turned on the current range.
   count = 0
-  for k in sorted(list(onLookup.keys()) + list(offLookup.keys())):
-    assert k in onLookup or k in offLookup, 'missing range'
+
+  # Sort the keys, but break ties by always putting on's before off's.
+  sortedKeys = sorted(keys, key=lambda x: (x[0], (1 if x[1] else 2)))
+  for k, isOn in sortedKeys:
     assert polarity >= 0, 'bad polarity'
 
-    while onLookup[k] > 0:
-      onLookup[k] -= 1
-      print('on:', k)
+    if isOn:
       polarity += 1
       if onValue is None:
         onValue = k
-
-    while offLookup[k] > 0:
-      offLookup[k] -= 1
-      print('off:', k)
+    else:
       polarity -= 1
-
       if polarity == 0:
         # This "off" value closes a range. Add the count.
         assert onValue is not None, 'onValue not set'
