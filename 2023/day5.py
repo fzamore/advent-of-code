@@ -137,4 +137,4 @@ def part2() -> None:
   print()
   print(min(mappedValues.values()))
 
-part1()
+part2()
