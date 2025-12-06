@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional
-from common.ranges import subtractMultipleRanges
+from common.ranges import intersectRanges, subtractMultipleRanges
 
 input = open('day5.txt').read().split("\n\n")
 
@@ -33,13 +33,6 @@ def traceValue(map: Map, value: int) -> int:
       return value + range.delta
   return value
 
-# Performs an intersection of the two ranges. None represents an empty
-# intersection.
-def intersectRanges(r1: range, r2: range) -> Optional[range]:
-  if r2.start > r1.stop or r1.start > r2.stop:
-    return None
-  return range(max(r1.start, r2.start), min(r1.stop, r2.stop))
-
 # Combines two maps into a single map.
 def combineMaps(m1: Map, m2: Map) -> Map:
   intersectionRanges: list[MapRange] = []
@@ -51,16 +44,12 @@ def combineMaps(m1: Map, m2: Map) -> Map:
       end = r2.end - r1.delta
 
       # intersect (start, end) with r1
-      intersection = intersectRanges(
-        range(start, end),
-        range(r1.start, r1.end),
-      )
+      intersection = intersectRanges((start, end), (r1.start, r1.end))
       if intersection is not None:
         # If there is an intersection, we add the two deltas, because they
         # will get applied in sequence.
-        rx = range(intersection.start, intersection.stop)
         intersectionRanges.append(
-          MapRange(rx.start, rx.stop, r1.delta + r2.delta)
+          MapRange(intersection[0], intersection[1], r1.delta + r2.delta)
         )
 
   # Subtract the intersection ranges from all ranges in m1 and m2, and add
@@ -69,27 +58,19 @@ def combineMaps(m1: Map, m2: Map) -> Map:
   existingRanges = []
   for r1 in m1.ranges:
     results = subtractMultipleRanges(
-      range(r1.start, r1.end),
-      [range(r.start, r.end) for r in intersectionRanges],
+      (r1.start, r1.end),
+      [(r.start, r.end) for r in intersectionRanges],
     )
-    for result in results:
-      existingRanges.append(MapRange(
-        result.start,
-        result.stop,
-        r1.delta,
-      ))
+    for start, end in results:
+      existingRanges.append(MapRange(start, end, r1.delta))
 
   for r2 in m2.ranges:
     results = subtractMultipleRanges(
-      range(r2.start, r2.end),
-      [range(r.start, r.end) for r in intersectionRanges],
+      (r2.start, r2.end),
+      [(r.start, r.end) for r in intersectionRanges],
     )
-    for result in results:
-      existingRanges.append(MapRange(
-        result.start,
-        result.stop,
-        r2.delta,
-      ))
+    for start, end in results:
+      existingRanges.append(MapRange(start, end, r2.delta))
 
   intersectionRanges.extend(existingRanges)
   name = '%s-to-%s' % (
@@ -98,7 +79,7 @@ def combineMaps(m1: Map, m2: Map) -> Map:
   )
   return Map(name, intersectionRanges)
 
-def part1():
+def part1() -> None:
   seeds = list(map(int, input[0].split(': ')[1].split()))
   print('seeds:', seeds)
   print(len(seeds))
@@ -117,7 +98,7 @@ def part1():
 
   print(min(locations))
 
-def part2():
+def part2() -> None:
   seedRangeValues = list(map(int, input[0].split(': ')[1].split()))
   assert len(seedRangeValues) % 2 == 0, 'bad seed ranges input'
 
@@ -140,13 +121,10 @@ def part2():
   for start, length in seedRanges:
     s1, s2 = start, start + length - 1
     for r in combinedMap.ranges:
-      rx = intersectRanges(
-        range(s1, s2),
-        range(r.start, r.end),
-      )
+      rx = intersectRanges((s1, s2), (r.start, r.end))
       if rx is not None:
         # The intersection exists. Take the lowest seed in the intersection.
-        candidates.add(rx.start)
+        candidates.add(rx[0])
       else:
         # If this seed range didn't match any map ranges, then there is a
         # 1:1 mapping for everything in this range. Take the lowest value.
@@ -159,4 +137,4 @@ def part2():
   print()
   print(min(mappedValues.values()))
 
-part2()
+part1()

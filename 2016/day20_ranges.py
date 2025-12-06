@@ -1,14 +1,14 @@
 from common.ints import ints
-from common.ranges import subtractMultipleRanges
+from common.ranges import Range, subtractMultipleRanges
 
 input = open('day20.txt').read().splitlines()
 
-def parseInput() -> list[range]:
+def parseInput() -> list[Range]:
   r = []
   for line in input:
     a, b = ints(line)
     assert b < 0, 'ints() should parse a dash as negative'
-    r.append(range(a, -b))
+    r.append((a, -b))
   return r
 
 def part2() -> None:
@@ -16,15 +16,15 @@ def part2() -> None:
   print('ranges:', len(ranges))
 
   hi = 4294967295
-  freelist = subtractMultipleRanges(range(0, hi), ranges)
+  freelist = subtractMultipleRanges((0, hi), ranges)
   print('freelist size:', len(freelist))
 
   # For some reason, each entry in the freelist contains only a single IP.
   # As far as I can tell, this isn't a requirement of the problem.
-  for r in freelist:
-    assert r.stop - r.start == 0, 'expecting freelist to contain only singletons'
+  for start, end in freelist:
+    assert end - start == 0, 'expecting freelist to contain only singletons'
 
-  s = sum([r.stop - r.start + 1 for r in freelist])
+  s = sum([end - start + 1 for (start, end) in freelist])
   print(s)
 
 part2()
