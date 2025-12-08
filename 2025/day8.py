@@ -18,14 +18,14 @@ def parse() -> list[Coords]:
   return r
 
 def distSquared(c1: Coords, c2: Coords) -> int:
-  return sum(abs(c1[i] - c2[i]) ** 2 for i in range(3))
+  return sum([(c1[i] - c2[i]) ** 2 for i in range(3)])
 
 def solve(n: Optional[int] = None) -> tuple[list[Circuit], Coords, Coords]:
   coords = parse()
   pairs = []
   for c1, c2 in combinations(coords, 2):
     pairs.append((distSquared(c1, c2), c1, c2))
-  pairs = sorted(pairs)
+  pairs.sort()
   print('pairs:', len(pairs))
   circuits: set[Circuit] = set()
   for i, (_, c1, c2) in enumerate(pairs):
