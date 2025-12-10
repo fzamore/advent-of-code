@@ -10,7 +10,7 @@ def part1() -> None:
   mx = -1
   for c1, c2 in combinations(coords, 2):
     (x1, y1), (x2, y2) = c1, c2
-    area = abs(x1 - x2 + 1) * abs(y1 - y2 + 1)
+    area = (abs(x1 - x2) + 1) * (abs(y1 - y2) + 1)
     mx = max(mx, area)
   print(mx)
 
