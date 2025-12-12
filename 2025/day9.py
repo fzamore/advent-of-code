@@ -80,11 +80,11 @@ def part2() -> None:
   # for my input). A box is within the region if a/ none of its four sides
   # cross a region boundary and b/ all four corners of the box are within
   # the region. In my implementation, checking whether a point is within
-  # the region is slow, so I first do a pass to filter down to only the
-  # boxes whose sides do not cross a region boundary.
+  # the region is slow, so I only do this check if none of the box's
+  # segments cross a region boundary.
 
   print()
-  print('***** SHOULD COMPLETE IN <10s WITH pypy. OVER 70s WITH python *****')
+  print('***** SHOULD COMPLETE IN <10s WITH pypy. OVER 30s WITH python *****')
   print()
 
   coords = []
@@ -126,12 +126,12 @@ def part2() -> None:
     area = (abs(x1 - x2) + 1) * (abs(y1 - y2) + 1)
     boxes.append((area, c1, c2))
   print('boxes:', len(boxes))
-  boxes.sort(reverse=True)
 
-  # Do a first pass to remove all boxes whose segments cross with the
-  # perimeter of the overall regions.
-  print('first pass...')
-  nboxes = []
+  print('sorting...')
+  boxes.sort(reverse=True)
+  print('done')
+
+  print('checking...')
   for (area, c1, c2) in boxes:
     (x1, y1), (x2, y2) = c1, c2
     c3, c4 = (x1, y2), (x2, y1)
@@ -140,26 +140,16 @@ def part2() -> None:
     for s in ((c1, c3), (c3, c2), (c2, c4), (c4, c1)):
       for seg in segments:
         if doSegmentsCross(s, seg):
+          # This box crosses the region. It's invalid.
           isValidBox = False
           break
 
     if isValidBox:
-      nboxes.append((area, c1, c2))
-      continue
-
-  print('filtered:', len(nboxes))
-
-  # Do a second, more expensive pass to make sure that the two opposite
-  # corners of each box are within the region.
-  print('second pass...')
-  boxes = nboxes
-  for (area, c1, c2) in boxes:
-    (x1, y1), (x2, y2) = c1, c2
-    c3, c4 = (x1, y2), (x2, y1)
-    if isInsideRegion(grid, c3) and isInsideRegion(grid, c4):
-      print('done:', area, c1, c2)
-      print(area)
-      return
+      if isInsideRegion(grid, c3) and isInsideRegion(grid, c4):
+        # Both alternate corners are inside the region. We've found our box.
+        print('done:', area, c1, c2)
+        print(area)
+        return
 
   assert False, 'did not find answer'
 
