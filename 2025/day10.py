@@ -108,15 +108,17 @@ def solveAugmentedMatrix(m: Matrix) -> int:
       # The input is constructed to guarantee this.
       assert False, 'must have <= 3 free vars'
 
+  # Convert to list, which is faster than a matrix.
+  rrefList = rref.tolist()
   lastRrefCol = rref.col(-1)
   best = None
   for testValues in allTestValues:
     total = sum(testValues)
     isValid = True
     for basicVar in basicVars:
-      row = [i for i in range(rows) if rref[i, basicVar] != 0][0]
+      row = [i for i in range(rows) if rrefList[i][basicVar] != 0][0]
       varValue = lastRrefCol[row] - \
-        sum(tv * rref[row, freeVars[tvi]] for (tvi, tv) in enumerate(testValues))
+        sum(tv * rrefList[row][freeVars[tvi]] for (tvi, tv) in enumerate(testValues))
       if varValue < 0 or not varValue.is_integer:
         isValid = False
         break
