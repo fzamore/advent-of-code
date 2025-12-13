@@ -64,7 +64,6 @@ def convertToAugmentedMatrix(buttons: list[Button], joltages: Joltages) -> Matri
 
 def solveAugmentedMatrix(m: Matrix) -> int:
   print('matrix shape:', m.shape)
-  print(f'{m=}')
   rows, cols = m.shape
 
   # Reduced Row Echelon Form (RREF) of a matrix is such that the leading
@@ -108,9 +107,9 @@ def solveAugmentedMatrix(m: Matrix) -> int:
       # The input is constructed to guarantee this.
       assert False, 'must have <= 3 free vars'
 
-  # Convert to list, which is faster than a matrix.
+  # Convert to a list, which is faster than a matrix.
   rrefList = rref.tolist()
-  lastRrefCol = rref.col(-1)
+  lastRrefCol = [v[-1] for v in rrefList]
   best = None
   for testValues in allTestValues:
     total = sum(testValues)
