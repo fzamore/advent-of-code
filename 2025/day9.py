@@ -24,14 +24,12 @@ def isPointInsideRegion(grid: SparseGrid, vsegments: list[Segment], coords: Coor
       # This edge is to the right of the point. Ignore it.
       continue
 
-    # Add a delta to the y value so we're comparing "between" valid y
-    # coordinates and are thus guaranteed to never hit a horizontal line.
-    # This can be tricky when testing a point at the very bottom of the
-    # region (since adding the delta pushes the point below the boundary),
-    # but those cases are handled by the hasValue check at the beginning
-    # (i.e., if a point is at the very bottom, it is in the region iff it
-    # is on the perimeter).
-    if min(starty, endy) <= y + 0.5 <= max(starty, endy):
+    # Check whether this y-value intersects with the vertical line. For
+    # cases where the y-value is exactly the start or end of the vertical
+    # line, we consider the top to be non-intersecting and the bottom to
+    # be intersecting. That way, we correctly consider "staircase"
+    # patterns as parity 1, and "hump" and "trough" patterns as parity 0.
+    if min(starty, endy) < y <= max(starty, endy):
       parity += 1
 
   return parity % 2 == 1
