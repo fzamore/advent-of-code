@@ -7,34 +7,26 @@ data = open('day9.txt').read().splitlines()
 Coords = tuple[int, int]
 Segment = tuple[Coords, Coords]
 
-# Checks whether the given point is inside the region. We shoot a "beam"
-# in each of the four cardinal direction from the point, and if the beam
-# exits the region (i.e., it escapes the bounding rectangle for the entire
-# region) without intersecting the region's perimeter, we know the point
-# is not within the region.
-def isInsideRegion(grid: SparseGrid, coords: Coords) -> bool:
-  if grid.hasValue(coords):
-    return True
-
+# Checks whether the given point is inside the region by raycasting to the
+# left. This is implemented by counting all vertical edges to the left of
+# the point and determining which ones intersect with the y coordinate of
+# the point (i.e., a ray cast to the left would hit it). If there are an
+# even number, the point is outside the region, and if odd, it's inside.
+def isPointInsideRegion(vsegments: list[Segment], coords: Coords) -> bool:
   x, y = coords
-  (xmin, ymin), (xmax, ymax) = grid.getMinCoords(), grid.getMaxCoords()
-  deltas = [(1, 0), (0, 1), (-1, 0), (0, -1)]
-  for dx, dy in deltas:
-    nx, ny = x + dx, y + dy
-    hitPerimeter = False
-    while xmin <= nx <= xmax and ymin <= ny <= ymax:
-      if grid.hasValue((nx, ny)):
-        # We have hit the perimeter. The point is in the region in this direction.
-        hitPerimeter = True
-        break
-      nx += dx
-      ny += dy
+  parity = 0
+  for (startx, starty), (endx, endy) in vsegments:
+    assert startx == endx, 'not vertical segment'
+    if startx > x:
+      # This edge is to the right of the point. Ignore it.
+      continue
 
-    if not hitPerimeter:
-      # The beam escaped. This point is not within the region.
-      return False
+    # Add a delta to the y value so we're comparing "between" valid y
+    # coordinates and are thus guaranteed to never hit a horizontal line.
+    if min(starty, endy) <= y + 0.5 <= max(starty, endy):
+      parity += 1
 
-  return True
+  return parity % 2 == 1
 
 # Returns whether the two segments are parallel.
 def areSegmentsParallel(s1: Segment, s2: Segment) -> bool:
@@ -84,7 +76,7 @@ def part2() -> None:
   # segments cross a region boundary.
 
   print()
-  print('***** SHOULD COMPLETE IN <10s WITH pypy. OVER 30s WITH python *****')
+  print('***** SHOULD COMPLETE IN <2s WITH pypy. OVER 20s WITH python *****')
   print()
 
   coords = []
@@ -97,12 +89,21 @@ def part2() -> None:
 
   # Computing list of segments.
   segments = []
+  vsegments = []
   for i in range(n):
     if i < n - 1:
       segments.append((coords[i], coords[i + 1]))
+      seg = segments[-1]
+      if seg[0][0] == seg[1][0]:
+        vsegments.append(seg)
   segments.append((coords[n - 1], coords[0]))
+  seg = segments[-1]
+  if seg[0][0] == seg[1][0]:
+    vsegments.append(seg)
   print('segments:', len(segments))
+  print('vsegments:', len(vsegments))
   assert len(segments) == len(coords), 'bad segment computation'
+  assert len(segments) % 2 == 0 and len(segments) // 2 == len(vsegments), 'bad vsegments computations'
 
   # Adding all segments to the grid.
   grid = SparseGrid(2)
@@ -129,7 +130,6 @@ def part2() -> None:
 
   print('sorting...')
   boxes.sort(reverse=True)
-  print('done')
 
   print('checking...')
   for (area, c1, c2) in boxes:
@@ -145,7 +145,7 @@ def part2() -> None:
           break
 
     if isValidBox:
-      if isInsideRegion(grid, c3) and isInsideRegion(grid, c4):
+      if isPointInsideRegion(vsegments, c3) and isPointInsideRegion(vsegments, c4):
         # Both alternate corners are inside the region. We've found our box.
         print('done:', area, c1, c2)
         print(area)
