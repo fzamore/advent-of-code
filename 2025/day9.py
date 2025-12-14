@@ -12,7 +12,10 @@ Segment = tuple[Coords, Coords]
 # the point and determining which ones intersect with the y coordinate of
 # the point (i.e., a ray cast to the left would hit it). If there are an
 # even number, the point is outside the region, and if odd, it's inside.
-def isPointInsideRegion(vsegments: list[Segment], coords: Coords) -> bool:
+def isPointInsideRegion(grid: SparseGrid, vsegments: list[Segment], coords: Coords) -> bool:
+  if grid.hasValue(coords):
+    return True
+
   x, y = coords
   parity = 0
   for (startx, starty), (endx, endy) in vsegments:
@@ -23,6 +26,11 @@ def isPointInsideRegion(vsegments: list[Segment], coords: Coords) -> bool:
 
     # Add a delta to the y value so we're comparing "between" valid y
     # coordinates and are thus guaranteed to never hit a horizontal line.
+    # This can be tricky when testing a point at the very bottom of the
+    # region (since adding the delta pushes the point below the boundary),
+    # but those cases are handled by the hasValue check at the beginning
+    # (i.e., if a point is at the very bottom, it is in the region iff it
+    # is on the perimeter).
     if min(starty, endy) <= y + 0.5 <= max(starty, endy):
       parity += 1
 
@@ -145,7 +153,7 @@ def part2() -> None:
           break
 
     if isValidBox:
-      if isPointInsideRegion(vsegments, c3) and isPointInsideRegion(vsegments, c4):
+      if isPointInsideRegion(grid, vsegments, c3) and isPointInsideRegion(grid, vsegments, c4):
         # Both alternate corners are inside the region. We've found our box.
         print('done:', area, c1, c2)
         print(area)
