@@ -1,6 +1,7 @@
 from enum import IntEnum
-from typing import Optional, cast
+from typing import Iterable, Optional, cast
 from common.arraygrid import ArrayGrid, turnLeft, turnRight
+from common.shortestpath import dijkstraAllShortestPaths
 
 # This algorithm solves the "Penguin Path" puzzle on the cover of the
 # December 2025 issue of GAMES Magazine. The input represents a maze,
@@ -39,73 +40,92 @@ def initGrid() -> ArrayGrid:
   # Python is really dumb sometimes.
   return ArrayGrid.gridFromInput(cast(list[str], data))
 
-def getNextStates(state: PenguinState) -> list[PenguinState]:
-  return [s for s in PenguinState if s != state]
+def getNextPathStates(grid: ArrayGrid, pathState: PathState) -> Iterable[PathState]:
+  pos, penguinState, lastPos = pathState
+  x, y = pos
+  assert grid.areCoordsWithinBounds(x, y), 'moved beyond grid'
 
-def findShortestPath(
+  match grid.getValue(x, y):
+    case '#':
+      # We ran into the wall. Stop.
+      pass
+
+    case ' ' | 'S':
+      # Empty cell (or start). Choose any direction except the one we came from.
+      for ax, ay in grid.getAdjacentCoords(x, y):
+        if (ax, ay) == lastPos:
+          # No u-turns.
+          continue
+        yield ((ax, ay), penguinState, pos)
+
+    case 'R':
+      # Red fish. Go straight, but change state.
+      assert lastPos is not None, 'lastPos not set'
+      lx, ly = lastPos
+      assert lx == x or ly == y, 'can only move orthogonally one space at a time'
+      nx, ny = x + (x - lx), y + (y - ly)
+      assert (nx, ny) != lastPos, 'illegal u-turn'
+      for nstate in PenguinState:
+        if nstate != penguinState:
+          yield ((nx, ny), nstate, pos)
+
+    case 'G':
+      # Green fish. Move in the direction dicated by the state.
+      assert lastPos is not None, 'lastPos not set'
+      lx, ly = lastPos
+      dx, dy = x - lx, y - ly
+      match penguinState:
+        case PenguinState.LEFT:
+          dx, dy = turnLeft((dx, dy))
+        case PenguinState.RIGHT:
+          dx, dy = turnRight((dx, dy))
+      yield ((x + dx, y + dy), penguinState, pos)
+    case _:
+      assert False, 'bad grid value'
+
+def findShortestPathDfs(
   grid: ArrayGrid,
   pos: Coords,
-  state: PenguinState,
+  penguinState: PenguinState = PenguinState.STRAIGHT,
   lastPos: Optional[Coords] = None,
   pathStates: list[PathState] = [],
 ) -> Optional[list[Coords]]:
-  if (pos, state, lastPos) in pathStates:
+  if (pos, penguinState, lastPos) in pathStates:
     # We've already encountered this state. Stop.
     return None
 
   x, y = pos
-  if not grid.areCoordsWithinBounds(x, y):
-    # We've exited the grid. Stop.
-    return None
-  pathStates.append((pos, state, lastPos))
+  pathStates.append((pos, penguinState, lastPos))
 
-  v = grid.getValue(x, y)
-  if v == '#':
-    # We ran into the wall. Stop.
-    return None
-
-  if v == 'E':
+  assert grid.areCoordsWithinBounds(x, y), 'moved beyond grid'
+  if grid.getValue(x, y) == 'E':
     return [p[0] for p in pathStates]
 
-  # Keep track of subsequent recursive calls.
-  nextCalls: list[tuple[Coords, PenguinState]] = []
-
-  if v == ' ':
-    for ax, ay in grid.getAdjacentCoords(x, y):
-      nextCalls.append(((ax, ay), state))
-  elif v == 'R':
-    assert lastPos is not None, 'lastPos not set'
-    lx, ly = lastPos
-    assert lx == x or ly == y, 'bad movement'
-    nx, ny = x + (x - lx), y + (y - ly)
-    assert (nx, ny) != lastPos, 'bad movement'
-    for nstate in getNextStates(state):
-      nextCalls.append(((nx, ny), nstate))
-  elif v == 'G':
-    assert lastPos is not None, 'lastPos not set'
-    lx, ly = lastPos
-    dx, dy = x - lx, y - ly
-    match state:
-      case PenguinState.LEFT:
-        dx, dy = turnLeft((dx, dy))
-      case PenguinState.RIGHT:
-        dx, dy = turnRight((dx, dy))
-    nx, ny = x + dx, y + dy
-    nextCalls.append(((nx, ny), state))
-  else:
-    assert False, 'bad grid value'
-
-  shortestLen = 10000
+  shortestLen = 100000000
   bestResult = None
-  for npos, nstate in nextCalls:
-    if npos == lastPos:
-      # Don't allow u-turns.
-      continue
-    result = findShortestPath(grid, npos, nstate, pos, pathStates.copy())
+  for (npos, nstate, nLastPos) in getNextPathStates(grid, (pos, penguinState, lastPos)):
+    result = findShortestPathDfs(grid, npos, nstate, nLastPos, pathStates.copy())
     if result is not None and len(result) < shortestLen:
       shortestLen = len(result)
       bestResult = result
   return bestResult
+
+def findShortestPathDijkstra(grid: ArrayGrid, start: Coords) -> list[Coords]:
+  def getAdj(pathState: PathState) -> Iterable[tuple[PathState, int]]:
+    for nextPathState in getNextPathStates(grid, pathState):
+      yield nextPathState, 1
+
+  def isDone(pathState: PathState) -> bool:
+    (x, y), _, _ = pathState
+    return grid.getValue(x, y) == 'E'
+
+  startState: PathState = (start, PenguinState.STRAIGHT, None)
+  result = dijkstraAllShortestPaths(startState, getAdj, isDone)
+  allPaths = list(result[2])
+  assert len(allPaths) > 0, 'did not find a path'
+
+  # Arbitrarily return the first path.
+  return [p[0] for p in allPaths[0]]
 
 def printPath(path: list[Coords]) -> None:
   prev = path[0]
@@ -125,7 +145,7 @@ def printPath(path: list[Coords]) -> None:
         assert False, 'bad path'
     prev = next
 
-def solve():
+def solve() -> None:
   grid = initGrid()
   print('grid:', grid.getWidth(), grid.getHeight())
   grid.print2D()
@@ -134,15 +154,20 @@ def solve():
   for x, y, v in grid.getItems():
     if v == 'S':
       start = x, y
-      grid.setValue(x, y, ' ')
     if v == 'E':
       end = x, y
 
   assert start is not None, 'did not find start'
   print('start/end:', start, end)
-  path = findShortestPath(grid, start, PenguinState.STRAIGHT)
-  assert path is not None, 'did not find path'
-  print('found shortest path:', len(path))
+  pathDfs = findShortestPathDfs(grid, start)
+  assert pathDfs is not None, 'did not find path'
+  print('found shortest path:', len(pathDfs))
+
+  pathDijkstra = findShortestPathDijkstra(grid, start)
+  print('found shortest path via dijkstra:', len(pathDijkstra))
+
+  assert len(pathDfs) == len(pathDijkstra), 'two algorithms did not find same shortest path'
+
   # printPath(path)
 
 solve()
