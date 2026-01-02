@@ -27,26 +27,29 @@ data = '''#####E#####
 #####S#####'''.splitlines()
 
 Coords = tuple[int, int]
-class State(IntEnum):
+class PenguinState(IntEnum):
   STRAIGHT = 1
   LEFT = 2
   RIGHT = 3
+
+# Current position, penguin state, and last position.
+PathState = tuple[Coords, PenguinState, Optional[Coords]]
 
 def initGrid() -> ArrayGrid:
   # Python is really dumb sometimes.
   return ArrayGrid.gridFromInput(cast(list[str], data))
 
-def getNextStates(state: State) -> list[State]:
-  return [s for s in State if s != state]
+def getNextStates(state: PenguinState) -> list[PenguinState]:
+  return [s for s in PenguinState if s != state]
 
 def findShortestPath(
   grid: ArrayGrid,
   pos: Coords,
-  state: State,
+  state: PenguinState,
   lastPos: Optional[Coords] = None,
-  prevStates: list[tuple[Coords, State, Optional[Coords]]] = [],
+  pathStates: list[PathState] = [],
 ) -> Optional[list[Coords]]:
-  if (pos, state, lastPos) in prevStates:
+  if (pos, state, lastPos) in pathStates:
     # We've already encountered this state. Stop.
     return None
 
@@ -54,7 +57,7 @@ def findShortestPath(
   if not grid.areCoordsWithinBounds(x, y):
     # We've exited the grid. Stop.
     return None
-  prevStates.append((pos, state, lastPos))
+  pathStates.append((pos, state, lastPos))
 
   v = grid.getValue(x, y)
   if v == '#':
@@ -62,10 +65,10 @@ def findShortestPath(
     return None
 
   if v == 'E':
-    return [p[0] for p in prevStates]
+    return [p[0] for p in pathStates]
 
   # Keep track of subsequent recursive calls.
-  nextCalls: list[tuple[Coords, State]] = []
+  nextCalls: list[tuple[Coords, PenguinState]] = []
 
   if v == ' ':
     for ax, ay in grid.getAdjacentCoords(x, y):
@@ -83,9 +86,9 @@ def findShortestPath(
     lx, ly = lastPos
     dx, dy = x - lx, y - ly
     match state:
-      case State.LEFT:
+      case PenguinState.LEFT:
         dx, dy = turnLeft((dx, dy))
-      case State.RIGHT:
+      case PenguinState.RIGHT:
         dx, dy = turnRight((dx, dy))
     nx, ny = x + dx, y + dy
     nextCalls.append(((nx, ny), state))
@@ -98,7 +101,7 @@ def findShortestPath(
     if npos == lastPos:
       # Don't allow u-turns.
       continue
-    result = findShortestPath(grid, npos, nstate, pos, prevStates.copy())
+    result = findShortestPath(grid, npos, nstate, pos, pathStates.copy())
     if result is not None and len(result) < shortestLen:
       shortestLen = len(result)
       bestResult = result
@@ -137,7 +140,7 @@ def solve():
 
   assert start is not None, 'did not find start'
   print('start/end:', start, end)
-  path = findShortestPath(grid, start, State.STRAIGHT)
+  path = findShortestPath(grid, start, PenguinState.STRAIGHT)
   assert path is not None, 'did not find path'
   print('found shortest path:', len(path))
   # printPath(path)
