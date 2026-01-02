@@ -12,8 +12,9 @@ from common.shortestpath import dijkstraAllShortestPaths
 # straight, but whenever he crosses a red fish (R), he must switch to a
 # different state.
 #
-# The solution give in the magazine was a path of length 75, but the
-# shortest path I found is of length 71.
+# The solution given in the magazine was a path of length 75, but the
+# shortest path I found is of length 71. (To be fair, the magazine did not
+# specify that it was looking for the shortest path.)
 
 data = '''#####E#####
 #G GRG G  #
