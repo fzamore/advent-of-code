@@ -3,6 +3,7 @@ day*.txt
 
 # Backup files
 *.py.bak
+*.txt.bak
 
 # Mac files
 .DS_Store
