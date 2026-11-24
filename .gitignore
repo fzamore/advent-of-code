@@ -1,6 +1,7 @@
 # Input files
 day*.txt
 battleship*.txt
+quest*.txt
 
 # Backup files
 *.py.bak
